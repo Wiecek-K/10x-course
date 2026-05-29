@@ -45,6 +45,27 @@ All generated file content must be in **English** — UI strings, code comments,
 - **React hooks**: extract to `src/components/hooks/`.
 - **Services/helpers**: `src/lib/` for utilities; `src/lib/services/` for extracted business logic.
 - **Shared types** (entities, DTOs): `src/types.ts`.
+- **Strong typing — prefer unions over `string`**: when a field's value set is known and finite, define a literal union type in `src/types.ts` — never leave it as `string`. When Supabase generates `string` for a constrained column (text + CHECK constraint), narrow it in `src/types.ts` and cast with `as YourType` at the query boundary — the cast is valid because the DB constraint enforces the values at runtime; the generator just can't see it.
+
+  ```ts
+  // ✅ do
+  export type ProcessingStatus = 'pending' | 'processing' | 'done' | 'failed';
+  export type Role = 'owner' | 'viewer';
+
+  // ❌ don't
+  processing_status: string;
+  role: string;
+  ```
+
+  ```ts
+  // ✅ do — narrow at the Supabase query boundary
+  const { data } = await supabase.from('links').select('*');
+  return json(data as Link[]);
+
+  // ❌ don't — let the generated string type leak into domain code
+  return json(data); // data[].processing_status is string, not ProcessingStatus
+  ```
+
 - **Supabase migrations**: `supabase/migrations/` named `YYYYMMDDHHmmss_short_description.sql`. Always enable RLS on new tables with granular per-operation, per-role policies.
 
 ### Environment
