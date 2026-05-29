@@ -1,9 +1,10 @@
 ---
 change_id: domain-data-foundation
 roadmap_id: F-01
-status: planned
+status: plan_reviewed
 created: 2026-05-29
 updated: 2026-05-29
+reviewed: 2026-05-29
 source: roadmap
 ---
 

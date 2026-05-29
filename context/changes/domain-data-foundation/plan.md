@@ -72,7 +72,7 @@ Strategia migracji: dev-first via local Supabase stack (`bunx supabase start` wy
 ## Critical Implementation Details
 
 - **`prerender = false` na API routes**: Astro 6 z `output: "server"` w configu nadal może traktować pliki bez explicit flag jako prerender-able. CLAUDE.md to deklaruje — `src/pages/api/links/index.ts` MUSI exportować `export const prerender = false;` na samym górze pliku. Pominięcie → endpoint nie odpowiada na runtime requests.
-- **Migration → types ordering**: `bun run db:types` musi być wykonane **po** apply migracji do **lokalnego** Supabase (skrypt używa `--local`). Próba generacji typów przed apply daje stary lub pusty schema. Sekwencja w Phase 1: write migration → `supabase db reset` → `db:types` → commit.
+- **Migration → types ordering**: `bun run db:types` musi być wykonane **po** apply migracji do **lokalnego** Supabase (skrypt używa `--local`). Próba generacji typów przed apply daje stary lub pusty schema. Sekwencja w Phase 1: write migration → `bunx supabase db reset` → `bun run db:types` → commit.
 
 ## Phase 1: Schema migration + RLS + type generation
 
@@ -86,7 +86,7 @@ Pierwsza migracja domeny tworzy tabelę `links` z RLS i 4 granularnymi politykam
 
 **File**: `supabase/migrations/20260529120000_create_links.sql`
 
-**Intent**: Tworzy `public.links` jako pierwszą tabelę domeny; włącza RLS i deklaruje 4 polityki authenticated per-op scoped `auth.uid() = user_id`. Definiuje minimalny schema dla S-01 / S-02 / S-04 / S-05 / S-06: PK uuid, FK do `auth.users` z `ON DELETE CASCADE` (gdy user kasuje konto, jego linki znikają — NFR "Izolacja danych"), URL jako text NOT NULL, nullable `micro_description` (per NFR niezawodności — link bez opisu jest dozwolony), boolean `in_library` (default false = inbox), nullable `last_visited`, audit timestamps z trigger.
+**Intent**: Tworzy `public.links` jako pierwszą tabelę domeny. Przed zapisem pliku utwórz katalog: `mkdir -p supabase/migrations` (`supabase init` nie tworzy go automatycznie gdy żadna migracja jeszcze nie istnieje). włącza RLS i deklaruje 4 polityki authenticated per-op scoped `auth.uid() = user_id`. Definiuje minimalny schema dla S-01 / S-02 / S-04 / S-05 / S-06: PK uuid, FK do `auth.users` z `ON DELETE CASCADE` (gdy user kasuje konto, jego linki znikają — NFR "Izolacja danych"), URL jako text NOT NULL, nullable `micro_description` (per NFR niezawodności — link bez opisu jest dozwolony), boolean `in_library` (default false = inbox), nullable `last_visited`, audit timestamps z trigger.
 
 **Contract**: Migracja zawiera:
 - `CREATE TABLE public.links` z kolumnami: `id uuid PK DEFAULT gen_random_uuid()`, `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `url text NOT NULL`, `micro_description text` (nullable), `in_library boolean NOT NULL DEFAULT false`, `processing_status text NOT NULL DEFAULT 'pending' CHECK (processing_status IN ('pending', 'processing', 'done', 'failed'))`, `last_visited timestamptz` (nullable), `created_at timestamptz NOT NULL DEFAULT now()`, `updated_at timestamptz NOT NULL DEFAULT now()`
@@ -223,13 +223,13 @@ Implementuje `POST /api/links` (create) i `GET /api/links` (list) z Zod walidacj
   - `CreateLinkSchema.safeParse(body)` → 400 ze strukturalnym `{ error: 'validation_error', issues: [...] }` przy fail
   - `if (!context.locals.user) → 401 { error: 'unauthorized' }`
   - `supabase.from('links').insert({ user_id: context.locals.user.id, url: data.url }).select().single()`
-  - Return 201 z JSON: bezpośrednio `Link` object (nie envelope — pojedynczy zasób)
+  - Return 201 z JSON: bezpośrednio `Link` object (nie envelope — pojedynczy zasób). Supabase query result ma typ `Row` gdzie `processing_status: string` — zwróć z `as Link` assertion (poprawne: CHECK constraint gwarantuje, że runtime value zawsze spełnia `ProcessingStatus`; generator nie wąska string → union)
 - `const GET: APIRoute = async (context) => {...}`:
   - `ListLinksQuerySchema.safeParse(Object.fromEntries(context.url.searchParams))` → 400 przy fail
   - `if (!context.locals.user) → 401`
   - Builder: `supabase.from('links').select('*').order('created_at', { ascending: false })`; jeśli `data.in_library !== undefined`, dodaj `.eq('in_library', data.in_library)`
-  - Return 200 z JSON `{ links: Link[] }` (envelope dla forward-compat na meta/pagination later)
-- Supabase client pobierany przez `createClient(context.request.headers, context.cookies)` — to samo co middleware (cookies-based SSR session). Jeśli `null` (env vars brak), return 500 "Supabase is not configured" — defensive ale nigdy nie powinno się stać w prod (deploy-plan ustawia secrets).
+  - Return 200 z JSON `{ links: data as Link[] }` (envelope dla forward-compat na meta/pagination later; ten sam powód `as` co w POST)
+- Supabase client pobierany przez `createClient(context.request.headers, context.cookies)` — to samo co middleware (cookies-based SSR session). Nie sprawdzaj null — middleware już obsługuje ten przypadek ustawiając `user = null`, co odpala 401 wcześniej.
 
 ### Success Criteria:
 
@@ -312,8 +312,8 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly locally (`supabase db reset` + `db diff` empty)
-- [ ] 1.2 Migration applies cleanly to remote (`supabase db push` succeeds)
+- [ ] 1.1 Migration applies cleanly locally (`bunx supabase db reset` + `bunx supabase db diff` empty)
+- [ ] 1.2 Migration applies cleanly to remote (`bunx supabase db push` succeeds)
 - [ ] 1.3 Generated types file exists and non-empty (`test -s src/db/database.types.ts`)
 - [ ] 1.4 `bun run build` passes
 - [ ] 1.5 `bun run lint` passes
