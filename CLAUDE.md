@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev` — start dev server (Cloudflare workerd runtime via `wrangler`)
-- `npm run build` — production build (SSR via `@astrojs/cloudflare`)
-- `npm run preview` — preview production build
-- `npm run lint` — ESLint with type-checked rules
-- `npm run lint:fix` — auto-fix lint issues
-- `npm run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
+- `bun run dev` — start dev server (Cloudflare workerd runtime via `wrangler`)
+- `bun run build` — production build (SSR via `@astrojs/cloudflare`)
+- `bun run preview` — preview production build
+- `bun run lint` — ESLint with type-checked rules
+- `bun run lint:fix` — auto-fix lint issues
+- `bun run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
 
 Pre-commit hooks (husky + lint-staged): runs `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css,md}`.
 
@@ -40,7 +40,7 @@ All generated file content must be in **English** — UI strings, code comments,
 - **Path alias**: `@/*` maps to `./src/*` (tsconfig paths). Use it everywhere — no relative `../../` imports.
 - **Component split**: Astro components for static content/layout; React components only when client-side interactivity is needed.
 - **Class merging**: always use the `cn()` helper from `@/lib/utils` (clsx + tailwind-merge). Never concatenate Tailwind class strings manually.
-- **shadcn/ui**: components live in `src/components/ui/`, "new-york" style variant. Add new ones with `npx shadcn@latest add <name>`.
+- **shadcn/ui**: components live in `src/components/ui/`, "new-york" style variant. Add new ones with `bunx shadcn@latest add <name>`.
 - **API routes**: export uppercase `GET`, `POST`, etc.; validate input with zod.
 - **React hooks**: extract to `src/components/hooks/`.
 - **Services/helpers**: `src/lib/` for utilities; `src/lib/services/` for extracted business logic.
@@ -51,8 +51,8 @@ All generated file content must be in **English** — UI strings, code comments,
 
 - Node.js v22.14.0 (see `.nvmrc`)
 - Copy `.env.example` → `.env` for Node-based tooling; copy to `.dev.vars` for Cloudflare local dev (`wrangler` reads `.dev.vars`, not `.env`)
-- Local Supabase stack: `npx supabase start` (requires Docker; Studio at `http://localhost:54323`)
-- Deploy: `npx wrangler deploy` (set `SUPABASE_URL` + `SUPABASE_KEY` as Cloudflare secrets)
+- Local Supabase stack: `bunx supabase start` (requires Docker; Studio at `http://localhost:54323`)
+- Deploy: `bunx wrangler deploy` (set `SUPABASE_URL` + `SUPABASE_KEY` as Cloudflare secrets)
 
 ## CI
 
