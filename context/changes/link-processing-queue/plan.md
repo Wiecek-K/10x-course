@@ -62,22 +62,33 @@ bunx wrangler queues create tabzero-link-processing
 bunx wrangler queues create tabzero-link-processing-dlq
 ```
 
-#### 2. wrangler.jsonc — queues config + main
+#### 2. wrangler.jsonc — queues config
 
 **File:** `wrangler.jsonc`
 
-**Intent:** Declare the queue producer binding and consumer config so wrangler wires `LINK_QUEUE` into the Worker env at runtime. Point `main` at the custom entrypoint that Phase 2 will create.
+**Intent:** Declare the queue producer binding and consumer config so wrangler wires `LINK_QUEUE` into the Worker env at runtime. Leave `"main"` unchanged at this phase — it moves to Phase 2 when `src/worker.ts` is created.
 
-**Contract:** Change `"main"` from `"@astrojs/cloudflare/entrypoints/server"` to `"./src/worker.ts"`. Add a `"queues"` key with:
+**Contract:** Add a `"queues"` key with:
 - `producers`: `[{ "queue": "tabzero-link-processing", "binding": "LINK_QUEUE" }]`
 - `consumers`: `[{ "queue": "tabzero-link-processing", "max_batch_size": 10, "max_batch_timeout": 30, "max_retries": 3, "retry_delay": 300, "dead_letter_queue": "tabzero-link-processing-dlq" }]`
+
+#### 3. Generate and commit runtime types
+
+**Action:** Run after the `"queues"` block is in place:
+
+```
+bunx wrangler types
+```
+
+**Intent:** Generate `worker-configuration.d.ts` in the project root. This file contains the Cloudflare runtime globals (`Queue<T>`, `ExportedHandler<Env>`, `MessageBatch<Body>`, etc.) and the generated `Cloudflare.Env` namespace with `LINK_QUEUE: Queue<unknown>`. TypeScript picks it up automatically via `tsconfig "include": ["**/*"]`. Commit the generated file — re-run whenever `wrangler.jsonc` bindings change.
 
 ### Success Criteria
 
 #### Automated Verification
 
-- `bun run build` passes — adapter resolves `src/worker.ts` (created in Phase 2) with no virtual-module errors.
+- `bun run build` passes — no regressions from the new `"queues"` config block.
 - `bunx wrangler deploy --dry-run` passes — config valid, queue bindings recognized.
+- `worker-configuration.d.ts` exists in the project root and contains `interface Queue<Body`.
 
 #### Manual Verification
 
@@ -92,11 +103,19 @@ bunx wrangler queues create tabzero-link-processing-dlq
 
 ### Overview
 
-Create `src/worker.ts` — the file `wrangler.jsonc main` now points to. It delegates HTTP requests to Astro and handles queue messages with a structured log + ack. Add the `Env` Worker interface to type declarations.
+Create `src/worker.ts` and point `wrangler.jsonc "main"` at it. It delegates HTTP requests to Astro and handles queue messages with a structured log + ack. Add the `Env` Worker interface to type declarations.
 
 ### Changes Required
 
-#### 1. src/worker.ts
+#### 1. wrangler.jsonc — update main
+
+**File:** `wrangler.jsonc`
+
+**Intent:** Switch the Worker entrypoint from the adapter's built-in server to the custom file created in this phase.
+
+**Contract:** Change `"main"` from `"@astrojs/cloudflare/entrypoints/server"` to `"./src/worker.ts"`.
+
+#### 2. src/worker.ts
 
 **File:** `src/worker.ts` (new)
 
@@ -104,13 +123,25 @@ Create `src/worker.ts` — the file `wrangler.jsonc main` now points to. It dele
 
 **Contract:** Default export satisfies `ExportedHandler<Env>`. `fetch` calls `handle(request, env, ctx)` imported from `@astrojs/cloudflare/handler`. `queue` iterates `batch.messages`, logs `[queue] consumed ${msg.body.type} v${msg.body.v} for link ${msg.body.linkId}`, calls `msg.ack()`. Imports `QueueMessage` from `@/types`.
 
-#### 2. src/env.d.ts — Env interface
+#### 3. src/env.d.ts — Env interface
 
 **File:** `src/env.d.ts`
 
-**Intent:** Teach TypeScript that `LINK_QUEUE` is a typed queue binding present in the Worker's `env`.
+**Intent:** Override the generated `LINK_QUEUE: Queue<unknown>` (from `worker-configuration.d.ts`) with a strongly-typed version so the compiler enforces the `QueueMessage` shape at every call site.
 
-**Contract:** Add `interface Env { LINK_QUEUE: Queue<QueueMessage> }` alongside the existing `App.Locals` declaration. Import `QueueMessage` from `@/types`.
+**Contract:** Add a `Cloudflare` namespace augmentation alongside the existing `App.Locals` declaration:
+
+```ts
+import type { QueueMessage } from '@/types';
+
+declare namespace Cloudflare {
+  interface Env {
+    LINK_QUEUE: Queue<QueueMessage>;
+  }
+}
+```
+
+Do NOT use a top-level `interface Env { ... }` — the generated file already emits one, and TypeScript requires merging properties to be identical. Namespace augmentation overrides cleanly.
 
 ### Success Criteria
 
@@ -166,7 +197,7 @@ export interface QueueMessage {
 
 #### 3. F-01 link-creation endpoint — wire producer
 
-**File:** F-01's link-creation endpoint (path defined by F-01 plan).
+**File:** `src/pages/api/links/index.ts` (F-01's POST handler).
 
 **Intent:** After a successful Supabase insert, enqueue a background processing job so the queue loop is exercised on every real link save.
 
@@ -243,11 +274,12 @@ None.
 
 - [ ] 1.1 `bun run build` passes after wrangler.jsonc changes
 - [ ] 1.2 `bunx wrangler deploy --dry-run` passes
+- [ ] 1.3 `worker-configuration.d.ts` exists in project root and contains `interface Queue<Body`
 
 #### Manual
 
-- [ ] 1.3 Queue `tabzero-link-processing` visible in Cloudflare dashboard
-- [ ] 1.4 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard
+- [ ] 1.4 Queue `tabzero-link-processing` visible in Cloudflare dashboard
+- [ ] 1.5 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard
 
 ### Phase 2: Custom Worker entrypoint + consumer
 
