@@ -89,7 +89,7 @@ Pierwsza migracja domeny tworzy tabelę `links` z RLS i 4 granularnymi politykam
 **Intent**: Tworzy `public.links` jako pierwszą tabelę domeny; włącza RLS i deklaruje 4 polityki authenticated per-op scoped `auth.uid() = user_id`. Definiuje minimalny schema dla S-01 / S-02 / S-04 / S-05 / S-06: PK uuid, FK do `auth.users` z `ON DELETE CASCADE` (gdy user kasuje konto, jego linki znikają — NFR "Izolacja danych"), URL jako text NOT NULL, nullable `micro_description` (per NFR niezawodności — link bez opisu jest dozwolony), boolean `in_library` (default false = inbox), nullable `last_visited`, audit timestamps z trigger.
 
 **Contract**: Migracja zawiera:
-- `CREATE TABLE public.links` z kolumnami: `id uuid PK DEFAULT gen_random_uuid()`, `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `url text NOT NULL`, `micro_description text` (nullable), `in_library boolean NOT NULL DEFAULT false`, `last_visited timestamptz` (nullable), `created_at timestamptz NOT NULL DEFAULT now()`, `updated_at timestamptz NOT NULL DEFAULT now()`
+- `CREATE TABLE public.links` z kolumnami: `id uuid PK DEFAULT gen_random_uuid()`, `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `url text NOT NULL`, `micro_description text` (nullable), `in_library boolean NOT NULL DEFAULT false`, `processing_status text NOT NULL DEFAULT 'pending' CHECK (processing_status IN ('pending', 'processing', 'done', 'failed'))`, `last_visited timestamptz` (nullable), `created_at timestamptz NOT NULL DEFAULT now()`, `updated_at timestamptz NOT NULL DEFAULT now()`
 - `CREATE INDEX idx_links_user_created ON public.links (user_id, created_at DESC)` — wspiera default list query
 - `ALTER TABLE public.links ENABLE ROW LEVEL SECURITY`
 - 4 polityki: `links_select_authenticated` (FOR SELECT TO authenticated USING `auth.uid() = user_id`), `links_insert_authenticated` (FOR INSERT TO authenticated WITH CHECK `auth.uid() = user_id`), `links_update_authenticated` (FOR UPDATE TO authenticated USING + WITH CHECK `auth.uid() = user_id`), `links_delete_authenticated` (FOR DELETE TO authenticated USING `auth.uid() = user_id`)
@@ -165,7 +165,8 @@ Wprowadza `zod` jako dependency; tworzy `src/types.ts` jako shared types entry p
 **Intent**: Singularne miejsce dla entity i DTO types używanych przez konsumentów (API routes, później UI komponenty, services). Re-exportuje `Link` z generated `Database` types; eksportuje Zod-inferred input shapes.
 
 **Contract**: Module exports:
-- `export type Link = Database['public']['Tables']['links']['Row']`
+- `export type ProcessingStatus = 'pending' | 'processing' | 'done' | 'failed'`
+- `export type Link = Omit<Database['public']['Tables']['links']['Row'], 'processing_status'> & { processing_status: ProcessingStatus }` — narrows generated `string` to the semantic union; keep the Omit pattern so future column additions from the generator pass through unchanged
 - `export type LinkInsert = Database['public']['Tables']['links']['Insert']`
 - `export type CreateLinkInput = z.infer<typeof CreateLinkSchema>` (re-export from `@/lib/schemas/links`)
 - `export type ListLinksQuery = z.infer<typeof ListLinksQuerySchema>` (re-export from `@/lib/schemas/links`)
@@ -195,7 +196,7 @@ Wprowadza `zod` jako dependency; tworzy `src/types.ts` jako shared types entry p
 - `CreateLinkSchema.safeParse({ url: "not a url" })` zwraca `success: false` z `ZodError`
 - `ListLinksQuerySchema.safeParse({ in_library: "true" })` zwraca `{ data: { in_library: true } }`
 - `ListLinksQuerySchema.safeParse({})` zwraca `{ data: { in_library: undefined } }`
-- TypeScript autocomplete w VS Code działa dla `Link.in_library` (typ: `boolean`) i `Link.micro_description` (typ: `string | null`)
+- TypeScript autocomplete w VS Code działa dla `Link.in_library` (typ: `boolean`), `Link.micro_description` (typ: `string | null`), i `Link.processing_status` (typ: `ProcessingStatus`)
 
 **Implementation Note**: Po Phase 2 paused for manual confirmation przed Phase 3.
 
@@ -338,7 +339,7 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 - [ ] 2.5 `CreateLinkSchema.safeParse({url:"https://example.com"})` → success
 - [ ] 2.6 `CreateLinkSchema.safeParse({url:"not a url"})` → failure z ZodError
 - [ ] 2.7 `ListLinksQuerySchema.safeParse({in_library:"true"})` → `{data: {in_library: true}}`
-- [ ] 2.8 TS autocomplete dla `Link.in_library` (boolean) i `Link.micro_description` (string|null) działa
+- [ ] 2.8 TS autocomplete dla `Link.in_library` (boolean), `Link.micro_description` (string|null), i `Link.processing_status` (ProcessingStatus) działa
 
 ### Phase 3: API endpoints
 

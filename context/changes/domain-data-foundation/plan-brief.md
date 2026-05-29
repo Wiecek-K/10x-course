@@ -25,13 +25,15 @@ Tabela `links` istnieje w Supabase (lokalnie + remote) z RLS i 4 granularnymi po
 | Input validation            | Zod, install w F-01                                          | Ustala konwencję CLAUDE.md "validate input with zod"; downstream slices dziedziczą wzorzec za darmo.        | Plan           |
 | API surface                 | Tylko `POST /api/links` + `GET /api/links` (list)            | Foundation scope cap z roadmapy; PATCH/DELETE/by-id dochodzą w S-04.                                        | Roadmap + Plan |
 | List shape                  | `ORDER BY created_at DESC` + opcjonalny `?in_library=...`    | Forward-compat dla S-04 split inbox/library views; PRD scale (~100 user) nie wymaga paginacji.              | Plan           |
+| processing_status column    | `text NOT NULL DEFAULT 'pending'` z CHECK 4-wartościowym     | Kolumna musi istnieć zanim S-02 consumer ląduje — dodanie jej w F-02/S-02 to bezcelowy drugi migration na tej samej tabeli; `default 'pending'` eliminuje backfill. | Cross-feature (F-02 planning) |
 
 ## Scope
 
 **In scope:**
 - Migracja `links` z RLS + 4 polityki authenticated per-op (SELECT/INSERT/UPDATE/DELETE)
+- Kolumna `processing_status text NOT NULL DEFAULT 'pending'` w migracji (enum: `pending / processing / done / failed`; wypełniana przez S-02 consumer)
 - Generowane `src/db/database.types.ts` + `bun run db:types` script
-- `src/types.ts` jako shared types entry (re-export `Link` z Database types + Zod-inferred DTOs)
+- `src/types.ts` jako shared types entry: `ProcessingStatus` union type + `Link` z narrowed `processing_status: ProcessingStatus` + Zod-inferred DTOs
 - `src/lib/schemas/links.ts` z Zod schemas (`CreateLinkSchema`, `ListLinksQuerySchema`)
 - `POST /api/links` + `GET /api/links`
 - Housekeeping: `supabase/config.toml` `project_id` i `package.json` `name` → `tabzero`
