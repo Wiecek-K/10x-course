@@ -38,6 +38,19 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 | S-06  | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary | proposed |
 | S-05  | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach          | F-01             | FR-001, FR-010, US-01     | proposed |
 
+## Dependency graph
+
+```
+F-01 ───┬──────────────────────────────────────────────────> S-05
+        │
+        └──> S-01 ──┬──────────────────────────────────────> S-04
+                    │
+F-02 ───────────────┴──> S-02 ──┬──────────────────────────> S-03
+                                 └──────────────────────────> S-06
+```
+
+Czytanie: strzałka A → B oznacza "A jest prerequisite B". F-01 i F-02 mogą iść równolegle. S-05 może iść równolegle z całym rdzeniem (zależy tylko od F-01).
+
 ## Streams
 
 Nawigacja — grupuje itemy dzielące łańcuch Prerequisites. Kanoniczne uporządkowanie żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania w poprzek równoległych torów.
