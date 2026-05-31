@@ -3,7 +3,7 @@ change_id: link-processing-queue
 roadmap_id: F-02
 status: plan_reviewed
 created: 2026-05-29
-updated: 2026-05-29
+updated: 2026-06-01
 ---
 
 # Change: link-processing-queue
