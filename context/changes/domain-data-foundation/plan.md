@@ -312,34 +312,34 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly locally (`bunx supabase db reset` + `bunx supabase db diff` empty)
-- [x] 1.2 Migration applies cleanly to remote (`bunx supabase db push` succeeds)
-- [x] 1.3 Generated types file exists and non-empty (`test -s src/db/database.types.ts`)
-- [x] 1.4 `bun run build` passes
-- [x] 1.5 `bun run lint` passes
+- [x] 1.1 Migration applies cleanly locally (`bunx supabase db reset` + `bunx supabase db diff` empty) — 21f35ea
+- [x] 1.2 Migration applies cleanly to remote (`bunx supabase db push` succeeds) — 21f35ea
+- [x] 1.3 Generated types file exists and non-empty (`test -s src/db/database.types.ts`) — 21f35ea
+- [x] 1.4 `bun run build` passes — 21f35ea
+- [x] 1.5 `bun run lint` passes — 21f35ea
 
 #### Manual
 
-- [x] 1.6 Supabase Studio: `links` table z poprawnym schema; RLS enabled; 4 polityki widoczne
-- [x] 1.7 RLS sanity: insert jako user A; user B widzi tylko własne rows
-- [x] 1.8 Remote dashboard pokazuje analogiczny stan
-- [x] 1.9 `package.json` `name` = `tabzero`; `supabase/config.toml` `project_id` = `tabzero`
+- [x] 1.6 Supabase Studio: `links` table z poprawnym schema; RLS enabled; 4 polityki widoczne — 21f35ea
+- [x] 1.7 RLS sanity: insert jako user A; user B widzi tylko własne rows — 21f35ea
+- [x] 1.8 Remote dashboard pokazuje analogiczny stan — 21f35ea
+- [x] 1.9 `package.json` `name` = `tabzero`; `supabase/config.toml` `project_id` = `tabzero` — 21f35ea
 
 ### Phase 2: Shared types + Zod schemas
 
 #### Automated
 
-- [ ] 2.1 `bun run build` passes (TS check picks up new types)
-- [ ] 2.2 `bun run lint` passes
-- [ ] 2.3 Imports z `@/types` (`Link`, `CreateLinkInput`, `ListLinksQuery`) rozwiązują się
-- [ ] 2.4 Imports z `@/lib/schemas/links` (`CreateLinkSchema`, `ListLinksQuerySchema`) rozwiązują się
+- [x] 2.1 `bun run build` passes (TS check picks up new types)
+- [x] 2.2 `bun run lint` passes
+- [x] 2.3 Imports z `@/types` (`Link`, `CreateLinkInput`, `ListLinksQuery`) rozwiązują się
+- [x] 2.4 Imports z `@/lib/schemas/links` (`CreateLinkSchema`, `ListLinksQuerySchema`) rozwiązują się
 
 #### Manual
 
-- [ ] 2.5 `CreateLinkSchema.safeParse({url:"https://example.com"})` → success
-- [ ] 2.6 `CreateLinkSchema.safeParse({url:"not a url"})` → failure z ZodError
-- [ ] 2.7 `ListLinksQuerySchema.safeParse({in_library:"true"})` → `{data: {in_library: true}}`
-- [ ] 2.8 TS autocomplete dla `Link.in_library` (boolean), `Link.micro_description` (string|null), i `Link.processing_status` (ProcessingStatus) działa
+- [x] 2.5 `CreateLinkSchema.safeParse({url:"https://example.com"})` → success
+- [x] 2.6 `CreateLinkSchema.safeParse({url:"not a url"})` → failure z ZodError
+- [x] 2.7 `ListLinksQuerySchema.safeParse({in_library:"true"})` → `{data: {in_library: true}}`
+- [x] 2.8 TS autocomplete dla `Link.in_library` (boolean), `Link.micro_description` (string|null), i `Link.processing_status` (ProcessingStatus) działa
 
 ### Phase 3: API endpoints
 
