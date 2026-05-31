@@ -312,18 +312,18 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly locally (`bunx supabase db reset` + `bunx supabase db diff` empty)
-- [ ] 1.2 Migration applies cleanly to remote (`bunx supabase db push` succeeds)
-- [ ] 1.3 Generated types file exists and non-empty (`test -s src/db/database.types.ts`)
-- [ ] 1.4 `bun run build` passes
-- [ ] 1.5 `bun run lint` passes
+- [x] 1.1 Migration applies cleanly locally (`bunx supabase db reset` + `bunx supabase db diff` empty)
+- [x] 1.2 Migration applies cleanly to remote (`bunx supabase db push` succeeds)
+- [x] 1.3 Generated types file exists and non-empty (`test -s src/db/database.types.ts`)
+- [x] 1.4 `bun run build` passes
+- [x] 1.5 `bun run lint` passes
 
 #### Manual
 
-- [ ] 1.6 Supabase Studio: `links` table z poprawnym schema; RLS enabled; 4 polityki widoczne
-- [ ] 1.7 RLS sanity: insert jako user A; user B widzi tylko własne rows
-- [ ] 1.8 Remote dashboard pokazuje analogiczny stan
-- [ ] 1.9 `package.json` `name` = `tabzero`; `supabase/config.toml` `project_id` = `tabzero`
+- [x] 1.6 Supabase Studio: `links` table z poprawnym schema; RLS enabled; 4 polityki widoczne
+- [x] 1.7 RLS sanity: insert jako user A; user B widzi tylko własne rows
+- [x] 1.8 Remote dashboard pokazuje analogiczny stan
+- [x] 1.9 `package.json` `name` = `tabzero`; `supabase/config.toml` `project_id` = `tabzero`
 
 ### Phase 2: Shared types + Zod schemas
 

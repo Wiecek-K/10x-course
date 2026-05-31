@@ -1,5 +1,5 @@
 {
-  "name": "10x-astro-starter",
+  "name": "tabzero",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
@@ -9,7 +9,8 @@
     "astro": "astro",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:types": "supabase gen types typescript --local > src/db/database.types.ts"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",
