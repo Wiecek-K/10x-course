@@ -272,9 +272,9 @@ None.
 
 #### Automated
 
-- [ ] 1.1 `bun run build` passes after wrangler.jsonc changes
-- [ ] 1.2 `bunx wrangler deploy --dry-run` passes
-- [ ] 1.3 `worker-configuration.d.ts` exists in project root and contains `interface Queue<Body`
+- [x] 1.1 `bun run build` passes after wrangler.jsonc changes
+- [x] 1.2 `bunx wrangler deploy --dry-run` passes
+- [x] 1.3 `worker-configuration.d.ts` exists in project root and contains `interface Queue<Body`
 
 #### Manual
 
