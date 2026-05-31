@@ -42,3 +42,6 @@ pnpm-debug.log*
 .wrangler/
 # macOS-specific files
 # jetbrains setting folder
+
+# Supabase Studio scratch snippets (local dev artifacts)
+supabase/snippets/
