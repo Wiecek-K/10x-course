@@ -6,6 +6,10 @@ import type { Link } from "@/types";
 export const prerender = false;
 
 export const POST: APIRoute = async (context) => {
+  if (!context.locals.user) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await context.request.json();
@@ -16,10 +20,6 @@ export const POST: APIRoute = async (context) => {
   const parsed = CreateLinkSchema.safeParse(body);
   if (!parsed.success) {
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 });
-  }
-
-  if (!context.locals.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
@@ -33,20 +33,22 @@ export const POST: APIRoute = async (context) => {
     .single();
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // eslint-disable-next-line no-console -- server-side error logging for Workers observability
+    console.error("POST /api/links insert failed:", error.message);
+    return Response.json({ error: "server_error" }, { status: 500 });
   }
 
   return Response.json(data, { status: 201 });
 };
 
 export const GET: APIRoute = async (context) => {
+  if (!context.locals.user) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const parsed = ListLinksQuerySchema.safeParse(Object.fromEntries(context.url.searchParams));
   if (!parsed.success) {
     return Response.json({ error: "validation_error", issues: parsed.error.issues }, { status: 400 });
-  }
-
-  if (!context.locals.user) {
-    return Response.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const supabase = createClient(context.request.headers, context.cookies);
@@ -60,7 +62,9 @@ export const GET: APIRoute = async (context) => {
     : baseQuery);
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // eslint-disable-next-line no-console -- server-side error logging for Workers observability
+    console.error("GET /api/links query failed:", error.message);
+    return Response.json({ error: "server_error" }, { status: 500 });
   }
 
   return Response.json({ links: data as Link[] });
