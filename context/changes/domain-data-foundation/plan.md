@@ -345,17 +345,17 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 
 #### Automated
 
-- [x] 3.1 `bun run build` passes
-- [x] 3.2 `bun run lint` passes
-- [x] 3.3 Endpoint file exists: `src/pages/api/links/index.ts`
-- [x] 3.4 `prerender = false` jest exportowany z endpoint file
+- [x] 3.1 `bun run build` passes — a8296bb
+- [x] 3.2 `bun run lint` passes — a8296bb
+- [x] 3.3 Endpoint file exists: `src/pages/api/links/index.ts` — a8296bb
+- [x] 3.4 `prerender = false` jest exportowany z endpoint file — a8296bb
 
 #### Manual
 
-- [x] 3.5 Local POST z session cookie i valid body → 201 z Link
-- [x] 3.6 Local GET z session cookie → `{ links: [...] }` z utworzonym linkiem
-- [x] 3.7 Local GET `?in_library=true` → `{ links: [] }`
-- [x] 3.8 Local POST bez session → 401 `{ error: 'unauthorized' }`
-- [x] 3.9 Local POST z malformed body `{"url":"not-a-url"}` → 400 z ZodError issues
-- [x] 3.10 Deploy `wrangler deploy`; te same 5 scenariuszy curl na prod URL pass
-- [x] 3.11 RLS isolation: drugi user nie widzi linków pierwszego
+- [x] 3.5 Local POST z session cookie i valid body → 201 z Link — a8296bb
+- [x] 3.6 Local GET z session cookie → `{ links: [...] }` z utworzonym linkiem — a8296bb
+- [x] 3.7 Local GET `?in_library=true` → `{ links: [] }` — a8296bb
+- [x] 3.8 Local POST bez session → 401 `{ error: 'unauthorized' }` — a8296bb
+- [x] 3.9 Local POST z malformed body `{"url":"not-a-url"}` → 400 z ZodError issues — a8296bb
+- [x] 3.10 Deploy `wrangler deploy`; te same 5 scenariuszy curl na prod URL pass — a8296bb
+- [x] 3.11 RLS isolation: drugi user nie widzi linków pierwszego — a8296bb
