@@ -329,33 +329,33 @@ To pierwsza migracja domeny — brak istniejących danych do migracji.
 
 #### Automated
 
-- [x] 2.1 `bun run build` passes (TS check picks up new types)
-- [x] 2.2 `bun run lint` passes
-- [x] 2.3 Imports z `@/types` (`Link`, `CreateLinkInput`, `ListLinksQuery`) rozwiązują się
-- [x] 2.4 Imports z `@/lib/schemas/links` (`CreateLinkSchema`, `ListLinksQuerySchema`) rozwiązują się
+- [x] 2.1 `bun run build` passes (TS check picks up new types) — 1f77f8e
+- [x] 2.2 `bun run lint` passes — 1f77f8e
+- [x] 2.3 Imports z `@/types` (`Link`, `CreateLinkInput`, `ListLinksQuery`) rozwiązują się — 1f77f8e
+- [x] 2.4 Imports z `@/lib/schemas/links` (`CreateLinkSchema`, `ListLinksQuerySchema`) rozwiązują się — 1f77f8e
 
 #### Manual
 
-- [x] 2.5 `CreateLinkSchema.safeParse({url:"https://example.com"})` → success
-- [x] 2.6 `CreateLinkSchema.safeParse({url:"not a url"})` → failure z ZodError
-- [x] 2.7 `ListLinksQuerySchema.safeParse({in_library:"true"})` → `{data: {in_library: true}}`
-- [x] 2.8 TS autocomplete dla `Link.in_library` (boolean), `Link.micro_description` (string|null), i `Link.processing_status` (ProcessingStatus) działa
+- [x] 2.5 `CreateLinkSchema.safeParse({url:"https://example.com"})` → success — 1f77f8e
+- [x] 2.6 `CreateLinkSchema.safeParse({url:"not a url"})` → failure z ZodError — 1f77f8e
+- [x] 2.7 `ListLinksQuerySchema.safeParse({in_library:"true"})` → `{data: {in_library: true}}` — 1f77f8e
+- [x] 2.8 TS autocomplete dla `Link.in_library` (boolean), `Link.micro_description` (string|null), i `Link.processing_status` (ProcessingStatus) działa — 1f77f8e
 
 ### Phase 3: API endpoints
 
 #### Automated
 
-- [ ] 3.1 `bun run build` passes
-- [ ] 3.2 `bun run lint` passes
-- [ ] 3.3 Endpoint file exists: `src/pages/api/links/index.ts`
-- [ ] 3.4 `prerender = false` jest exportowany z endpoint file
+- [x] 3.1 `bun run build` passes
+- [x] 3.2 `bun run lint` passes
+- [x] 3.3 Endpoint file exists: `src/pages/api/links/index.ts`
+- [x] 3.4 `prerender = false` jest exportowany z endpoint file
 
 #### Manual
 
-- [ ] 3.5 Local POST z session cookie i valid body → 201 z Link
-- [ ] 3.6 Local GET z session cookie → `{ links: [...] }` z utworzonym linkiem
-- [ ] 3.7 Local GET `?in_library=true` → `{ links: [] }`
-- [ ] 3.8 Local POST bez session → 401 `{ error: 'unauthorized' }`
-- [ ] 3.9 Local POST z malformed body `{"url":"not-a-url"}` → 400 z ZodError issues
-- [ ] 3.10 Deploy `wrangler deploy`; te same 5 scenariuszy curl na prod URL pass
-- [ ] 3.11 RLS isolation: drugi user nie widzi linków pierwszego
+- [x] 3.5 Local POST z session cookie i valid body → 201 z Link
+- [x] 3.6 Local GET z session cookie → `{ links: [...] }` z utworzonym linkiem
+- [x] 3.7 Local GET `?in_library=true` → `{ links: [] }`
+- [x] 3.8 Local POST bez session → 401 `{ error: 'unauthorized' }`
+- [x] 3.9 Local POST z malformed body `{"url":"not-a-url"}` → 400 z ZodError issues
+- [x] 3.10 Deploy `wrangler deploy`; te same 5 scenariuszy curl na prod URL pass
+- [x] 3.11 RLS isolation: drugi user nie widzi linków pierwszego
