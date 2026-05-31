@@ -41,7 +41,7 @@ All generated file content must be in **English** — UI strings, code comments,
 - **Component split**: Astro components for static content/layout; React components only when client-side interactivity is needed.
 - **Class merging**: always use the `cn()` helper from `@/lib/utils` (clsx + tailwind-merge). Never concatenate Tailwind class strings manually.
 - **shadcn/ui**: components live in `src/components/ui/`, "new-york" style variant. Add new ones with `bunx shadcn@latest add <name>`.
-- **API routes**: export uppercase `GET`, `POST`, etc.; validate input with zod.
+- **API routes**: export uppercase `GET`, `POST`, etc.; check `context.locals.user` first (401 if absent); validate input with zod. Status codes: `201` create, `200` read/update, `204` delete; single-resource not-found/not-yours → `404` (never `403`); errors carry `{ error: "<code>" }`. Full contract (status maps, response shapes, RLS→404 rationale): **`context/foundation/api-conventions.md`** — conform to it and verify against the real endpoint, never an assumption.
 - **React hooks**: extract to `src/components/hooks/`.
 - **Services/helpers**: `src/lib/` for utilities; `src/lib/services/` for extracted business logic.
 - **Shared types** (entities, DTOs): `src/types.ts`.
