@@ -278,8 +278,8 @@ None.
 
 #### Manual
 
-- [ ] 1.4 Queue `tabzero-link-processing` visible in Cloudflare dashboard
-- [ ] 1.5 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard
+- [x] 1.4 Queue `tabzero-link-processing` visible in Cloudflare dashboard — confirmed via `wrangler queues list` (id 829525b2…, created 2026-05-31)
+- [x] 1.5 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard — confirmed via `wrangler queues list` (id d91d1bf9…, created 2026-05-31)
 
 ### Phase 2: Custom Worker entrypoint + consumer
 
