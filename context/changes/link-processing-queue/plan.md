@@ -285,23 +285,23 @@ None.
 
 #### Automated
 
-- [x] 2.1 `bun run lint` passes on `src/worker.ts`
-- [x] 2.2 `bun run build` passes with `src/worker.ts` as main
+- [x] 2.1 `bun run lint` passes on `src/worker.ts` — 723efd0
+- [x] 2.2 `bun run build` passes with `src/worker.ts` as main — 723efd0
 
 #### Manual
 
-- [x] 2.3 No TypeScript errors in `src/worker.ts` or `src/env.d.ts`
+- [x] 2.3 No TypeScript errors in `src/worker.ts` or `src/env.d.ts` — 723efd0
 
 ### Phase 3: Producer helper + types + wiring
 
 #### Automated
 
-- [ ] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint
-- [ ] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve
+- [x] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint
+- [x] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve
 
 #### Manual
 
-- [ ] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors
+- [x] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors
 
 ### Phase 4: End-to-end verification
 
