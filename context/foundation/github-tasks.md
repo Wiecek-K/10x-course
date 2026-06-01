@@ -62,14 +62,14 @@ All 8 active issues. Prerequisites link to `#N` GitHub issue numbers.
 
 | GH# | Roadmap ID | Change ID | Title | Stream | Status | Milestone | Prerequisites |
 |---|---|---|---|---|---|---|---|
-| #2 | F-01 | `domain-data-foundation` | Links schema + RLS + minimal SSR API | A | ready | MVP Core | — |
+| #2 | F-01 | `domain-data-foundation` | Links schema + RLS + minimal SSR API | A | done (closed) | MVP Core | — |
 | #3 | F-02 | `link-processing-queue` | Cloudflare Queue plumbing scaffold | B | ready | MVP Core | — |
-| #4 | S-01 | `bot-capture-to-inbox` | Bot capture to inbox | A | proposed | MVP Core | #2 |
+| #4 | S-01 | `bot-capture-to-inbox` | Bot capture to inbox | A | ready | MVP Core | #2 |
 | #5 | S-02 | `auto-description-pipeline` | Auto-description pipeline ⭐ | A | proposed | MVP Core | #2, #3, #4 |
 | #6 | S-04 | `link-closure-flow` | Closure flow + per-link manual edit | C | proposed | MVP Extended | #2, #4 |
 | #7 | S-03 | `nl-search-on-links` | NL search on saved links | D | proposed | MVP Extended | #2, #5 |
 | #8 | S-06 | `category-proposal-and-routing` | Category proposal, meta-instructions + routing | D | proposed | MVP Extended | #2, #3, #5 |
-| #9 | S-05 | `extension-capture` | Browser extension capture | E | proposed | MVP Extended | #2 |
+| #9 | S-05 | `extension-capture` | Browser extension capture | E | ready | MVP Extended | #2 |
 
 ⭐ = north-star slice
 

@@ -2,6 +2,15 @@ import type { Database } from "@/db/database.types";
 import type { z } from "zod";
 import type { CreateLinkSchema, ListLinksQuerySchema } from "@/lib/schemas/links";
 
+export type JobType = "describe";
+
+export interface QueueMessage {
+  type: JobType;
+  v: 1;
+  linkId: string;
+  userId: string;
+}
+
 export type ProcessingStatus = "pending" | "processing" | "done" | "failed";
 
 export type Link = Omit<Database["public"]["Tables"]["links"]["Row"], "processing_status"> & {

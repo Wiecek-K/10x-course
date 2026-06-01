@@ -8,7 +8,7 @@ Wire Cloudflare Queue `tabzero-link-processing` as a plumbing-only foundation. N
 
 - `wrangler.jsonc` exists; `"main"` points at `@astrojs/cloudflare/entrypoints/server` (adapter built-in).
 - No `"queues"` section in `wrangler.jsonc`.
-- `src/types.ts` is empty.
+- `src/types.ts` exists (populated by F-01 with `Link`, `ProcessingStatus`, `LinkInsert`, etc.) — F-02 **appends** `QueueMessage`, must not overwrite it.
 - `src/env.d.ts` declares only `App.Locals` — no Worker `Env` interface.
 - No `src/worker.ts` exists.
 - CF secrets accessed via `astro:env/server`; CF bindings (non-secrets) accessed via `import { env } from 'cloudflare:workers'` — consistent with how the adapter's own `handler.js` works.
@@ -121,7 +121,7 @@ Create `src/worker.ts` and point `wrangler.jsonc "main"` at it. It delegates HTT
 
 **Intent:** Single Worker export: `fetch` forwards to Astro's SSR handler; `queue` is the no-op consumer that proves the full plumbing loop works.
 
-**Contract:** Default export satisfies `ExportedHandler<Env>`. `fetch` calls `handle(request, env, ctx)` imported from `@astrojs/cloudflare/handler`. `queue` iterates `batch.messages`, logs `[queue] consumed ${msg.body.type} v${msg.body.v} for link ${msg.body.linkId}`, calls `msg.ack()`. Imports `QueueMessage` from `@/types`.
+**Contract:** Default export satisfies `ExportedHandler<Env, QueueMessage>` — the second type parameter is required so `batch.messages[i].body` resolves to `QueueMessage` rather than `unknown` (with only `ExportedHandler<Env>`, `msg.body.type` raises "Object is of type 'unknown'" and the Phase 2 build gate fails). `fetch` calls `handle(request, env, ctx)` imported from `@astrojs/cloudflare/handler`. `queue` is typed `queue(batch: MessageBatch<QueueMessage>, env, ctx)`, iterates `batch.messages`, logs `[queue] consumed ${msg.body.type} v${msg.body.v} for link ${msg.body.linkId}`, calls `msg.ack()`. Imports `QueueMessage` from `@/types`.
 
 #### 3. src/env.d.ts — Env interface
 
@@ -170,7 +170,7 @@ Define `QueueMessage` (the shared contract), implement `enqueueLink()`, and wire
 
 **File:** `src/types.ts`
 
-**Intent:** Define the canonical message shape that all queue producers and future consumers (S-02, S-06) share. Locking it here in F-02 means S-02 inherits the contract rather than inventing it under capacity pressure.
+**Intent:** Define the canonical message shape that all queue producers and future consumers (S-02, S-06) share. Locking it here in F-02 means S-02 inherits the contract rather than inventing it under capacity pressure. **Append** to the existing F-01 domain types in this file — do not overwrite `Link`, `ProcessingStatus`, `LinkInsert`, etc.
 
 **Contract:**
 
@@ -201,7 +201,7 @@ export interface QueueMessage {
 
 **Intent:** After a successful Supabase insert, enqueue a background processing job so the queue loop is exercised on every real link save.
 
-**Contract:** Import `enqueueLink` from `@/lib/queue`. Call `await enqueueLink(newLink.id, userId)` after the insert returns. No error thrown by `enqueueLink` should fail the HTTP response — wrap in try/catch and log if send fails, but return 200 to the client regardless (capture is more important than queueing; S-02 has its own resilience layer).
+**Contract:** Import `enqueueLink` from `@/lib/queue`. After the insert returns (the inserted row is bound to `data`; the user id is `context.locals.user.id` — there is no separate `userId` variable), call `await enqueueLink(data.id, context.locals.user.id)`. No error thrown by `enqueueLink` should fail the HTTP response — wrap in try/catch and log if send fails, but return the existing `201 Created` success response regardless (do NOT change the status to 200; capture is more important than queueing; S-02 has its own resilience layer).
 
 ### Success Criteria
 
@@ -272,42 +272,42 @@ None.
 
 #### Automated
 
-- [ ] 1.1 `bun run build` passes after wrangler.jsonc changes
-- [ ] 1.2 `bunx wrangler deploy --dry-run` passes
-- [ ] 1.3 `worker-configuration.d.ts` exists in project root and contains `interface Queue<Body`
+- [x] 1.1 `bun run build` passes after wrangler.jsonc changes — 38bc0d2
+- [x] 1.2 `bunx wrangler deploy --dry-run` passes — 38bc0d2
+- [x] 1.3 `worker-configuration.d.ts` exists in project root and contains `interface Queue<Body` — 38bc0d2
 
 #### Manual
 
-- [ ] 1.4 Queue `tabzero-link-processing` visible in Cloudflare dashboard
-- [ ] 1.5 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard
+- [x] 1.4 Queue `tabzero-link-processing` visible in Cloudflare dashboard — confirmed via `wrangler queues list` (id 829525b2…, created 2026-05-31)
+- [x] 1.5 Queue `tabzero-link-processing-dlq` visible in Cloudflare dashboard — confirmed via `wrangler queues list` (id d91d1bf9…, created 2026-05-31)
 
 ### Phase 2: Custom Worker entrypoint + consumer
 
 #### Automated
 
-- [ ] 2.1 `bun run lint` passes on `src/worker.ts`
-- [ ] 2.2 `bun run build` passes with `src/worker.ts` as main
+- [x] 2.1 `bun run lint` passes on `src/worker.ts` — 723efd0
+- [x] 2.2 `bun run build` passes with `src/worker.ts` as main — 723efd0
 
 #### Manual
 
-- [ ] 2.3 No TypeScript errors in `src/worker.ts` or `src/env.d.ts`
+- [x] 2.3 No TypeScript errors in `src/worker.ts` or `src/env.d.ts` — 723efd0
 
 ### Phase 3: Producer helper + types + wiring
 
 #### Automated
 
-- [ ] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint
-- [ ] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve
+- [x] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint — 52cf1c2
+- [x] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve — 52cf1c2
 
 #### Manual
 
-- [ ] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors
+- [x] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors — 52cf1c2
 
 ### Phase 4: End-to-end verification
 
 #### Manual
 
-- [ ] 4.1 `bunx wrangler dev` starts without errors
-- [ ] 4.2 Save a link → terminal shows `[queue] consumed describe v1 for link <id>`
-- [ ] 4.3 No uncaught errors in wrangler dev output
-- [ ] 4.4 `bun run build` passes as final clean build
+- [x] 4.1 `bunx wrangler dev` starts without errors
+- [x] 4.2 Save a link → terminal shows `[queue] consumed describe v1 for link <id>`
+- [x] 4.3 No uncaught errors in wrangler dev output
+- [x] 4.4 `bun run build` passes as final clean build

@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { CreateLinkSchema, ListLinksQuerySchema } from "@/lib/schemas/links";
 import type { Link } from "@/types";
+import { enqueueLink } from "@/lib/queue";
 
 export const prerender = false;
 
@@ -36,6 +37,13 @@ export const POST: APIRoute = async (context) => {
     // eslint-disable-next-line no-console -- server-side error logging for Workers observability
     console.error("POST /api/links insert failed:", error.message);
     return Response.json({ error: "server_error" }, { status: 500 });
+  }
+
+  try {
+    await enqueueLink(data.id, context.locals.user.id);
+  } catch (err) {
+    // eslint-disable-next-line no-console -- queue send failure is non-fatal; S-02 has its own resilience layer
+    console.error("POST /api/links enqueue failed:", err);
   }
 
   return Response.json(data, { status: 201 });

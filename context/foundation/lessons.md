@@ -51,3 +51,20 @@ When a phase changes `wrangler.jsonc "main"` to point at a new file, that file m
 List endpoints (`GET /api/links`) are exempt — an empty array is the correct, unambiguous answer for "you have no matching links". The rule targets **resource-by-id** operations.
 
 **Applies to**: every upcoming single-resource slice — S-04 (`GET`/`PATCH`/`DELETE /api/links/:id`), and any future endpoint that fetches or mutates one row by id. Always `404` for not-yours/not-found; `403` stays reserved for future section-level gates.
+
+---
+
+## Generated files belong in ESLint `ignores`, not in the lint surface
+
+**Context**: Files produced by a code generator and committed to the repo — `worker-configuration.d.ts` (`wrangler types`), `src/db/database.types.ts` (Supabase type gen), and any future generated artifact.
+
+**Problem**: Generated files are overwritten wholesale by their tool on every regen, so any lint "fix" applied to them is erased on the next run. They also routinely violate the project's own rules — empty interfaces (`interface Env extends Cloudflare.Env {}`), `any`, non-conventional formatting — and often ship their own `/* eslint-disable */` header. Leaving them in the lint surface makes `bun run lint` fail on code you neither wrote nor control, training everyone to ignore red lint output.
+
+**Rule**: When a generator emits a committed file, add it to the `ignores` array in `eslint.config.js` in the **same change** that introduces it. Enforce style on hand-written code only; let the generator own its output. This mirrors the existing entry for `src/db/database.types.ts` — keep the list as the single home for "tool-owned, do-not-lint" files.
+
+```js
+// eslint.config.js
+{ ignores: ["src/db/database.types.ts", "worker-configuration.d.ts"] },
+```
+
+**Applies to**: every generated, committed artifact — current (`wrangler types`, Supabase types) and future (OpenAPI clients, codegen'd SDKs, etc.). New binding in `wrangler.jsonc` → re-run `wrangler types` → confirm the file is already covered by `ignores`.

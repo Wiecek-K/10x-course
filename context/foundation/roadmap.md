@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-05-29
+updated: 2026-06-01
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -29,8 +29,8 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 
 | ID    | Change ID                       | Outcome (user can …)                                                              | Prerequisites    | PRD refs                  | Status   |
 | ----- | ------------------------------- | --------------------------------------------------------------------------------- | ---------------- | ------------------------- | -------- |
-| F-01  | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                | —                | NFR "Izolacja danych", Access Control | ready    |
-| F-02  | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki    | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md | ready    |
+| F-01  | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                | —                | NFR "Izolacja danych", Access Control | done     |
+| F-02  | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki    | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md | done     |
 | S-01  | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)    | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s" | proposed |
 | S-02  | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core" | proposed |
 | S-04  | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01      | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
@@ -88,7 +88,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** to jest jedyna foundation oznaczona "invest deeply" — schemat domeny ma znaczenie strategiczne (refaktor RLS lub statusu enuma po wylądowaniu jakiegokolwiek slice'a kosztuje czas, którego nie ma przy `top_blocker: capacity`). Zakres trzymany minimalnie żeby nie ześliznąć się w "buduj całą bazę z góry" — tylko `links` + RLS, kategorie i events osobno w S-06/S-04.
-- **Status:** ready
+- **Status:** done
 
 ### F-02: Background processing skeleton (Cloudflare Queue plumbing)
 
@@ -101,7 +101,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** CF Queues free tier = 10k ops/dzień (~3300 capture/dzień przy 3 jobach na link); dla MVP wystarczy. Plumbing-only foundation — nie wbudowywać scraping ani LLM logiki tutaj, bo wpadnie w pułapkę "buduj cały backend z góry".
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -225,3 +225,6 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 ## Done
 
 (Pusta przy pierwszym generowaniu. `/10x-archive` dopisuje wpis tutaj — i przerzuca status itema na `done` — gdy zmiana z pasującym Change ID jest archiwizowana. NIE wypełniać ręcznie.)
+
+- **F-01: (foundation) schemat domeny dla `links` (URL, nullable `micro_description`, `status` z domyślnym `inbox`, `last_visited`, `created_at`, `user_id`) z RLS per user_id; minimalne SSR API do create/read linka. Brak UI, brak kategorii, brak lifecycle event log — to ma sens dopiero w S-04/S-06.** — Archived 2026-05-31 → `context/archive/2026-05-29-domain-data-foundation/`. Lesson: —.
+- **F-02: (foundation) kolejka `tabzero-link-processing` podpięta w `wrangler.jsonc`; helper producer importowalny z API; minimalny consumer Worker który ack'uje jobs (jeszcze nic nie robi). Brak scrapingu, brak LLM calls — to wszystko jest w S-02.** — Archived 2026-06-01 → `context/archive/2026-05-29-link-processing-queue/`. Lesson: —.
