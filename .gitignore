@@ -45,3 +45,9 @@ pnpm-debug.log*
 
 # Supabase Studio scratch snippets (local dev artifacts)
 supabase/snippets/
+
+# Playwright MCP session artifacts (snapshots, console logs)
+.playwright-mcp/
+
+# E2E test credentials (copy from .env.test.example)
+.env.test
