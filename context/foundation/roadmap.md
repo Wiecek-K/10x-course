@@ -114,8 +114,8 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Parallel with:** S-05 (drugi kanał capture; oba zależą tylko od F-01)
 - **Blockers:** —
 - **Unknowns:**
-  - Platforma bota (Telegram MVP vs WhatsApp vs inny) — Owner: user. Block: no. (Telegram jest domyślnie wystarczający; też w `## Open Roadmap Questions`.)
-  - Identity binding messenger user ↔ Supabase user (pairing code? magic link?) — Owner: TBD. Block: no. (Decyzja /10x-plan-level.)
+  - Platforma bota (Telegram MVP vs WhatsApp vs inny) — **Resolved: Telegram.** Dedykowana aplikacja mobilna z share sheet (system share menu) planowana jako osobny slice po MVP.
+  - Identity binding messenger user ↔ Supabase user (pairing code? magic link?) — **Resolved: pairing code.** Użytkownik generuje kod w web app → wysyła do bota → bot zapisuje mapping `telegram_id → user_id`. Docelowo: dedykowana aplikacja mobilna z logowaniem przez Supabase zastąpi pairing code.
 - **Risk:** pierwszy user-facing slice — wprowadza bot setup, API do POST linków, identity binding i minimalny widok inboxu naraz. PRD nie ma literalnego US dla bota (US-01 jest desktop-only) — luka odnotowana w Open Roadmap Questions.
 - **Status:** proposed
 
@@ -203,7 +203,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 
 ## Open Roadmap Questions
 
-1. **Platforma bota do mobile capture (FR-002 / S-01)** — Telegram wybrany ze względu na łatwość integracji w MVP, ale user personalnie z niego nie korzysta. Do weryfikacji: która platforma (Telegram / WhatsApp / inny) jest (a) najłatwiejsza dewelopersko i (b) używana przez pierwszą grupę testową z Discorda. Owner: user. Block: nie — Telegram działa jako MVP default; decyzja może być zmieniona bez wpływu na architekturę.
+1. **Platforma bota do mobile capture (FR-002 / S-01)** — **Resolved (2026-06-01): Telegram.** Dedykowana aplikacja mobilna z natywnym share sheet (pojawia się w systemowym menu "Udostępnij") planowana jako osobny slice post-MVP — zastąpi/uzupełni bot channel i rozwiąże identity binding przez Supabase login. Block: nie.
 
 2. **Zbieranie metadanych do QA algorytmów kategoryzacji (FR-006 / S-06)** — przy większej grupie użytkowników przydatne do weryfikacji czy routing i opisy działają. Do decyzji: (a) czy w ogóle, (b) jakie dane, (c) czy anonimizowane. Owner: user. Block: nie — MVP działa bez tego; decyzja po obserwacji pierwszej grupy testowej.
 
