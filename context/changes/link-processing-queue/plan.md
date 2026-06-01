@@ -296,18 +296,18 @@ None.
 
 #### Automated
 
-- [x] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint
-- [x] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve
+- [x] 3.1 `bun run lint` passes on `src/lib/queue.ts` and F-01 endpoint — 52cf1c2
+- [x] 3.2 `bun run build` passes — `QueueMessage` and `enqueueLink` resolve — 52cf1c2
 
 #### Manual
 
-- [x] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors
+- [x] 3.3 `enqueueLink` importable in F-01 endpoint with no TypeScript errors — 52cf1c2
 
 ### Phase 4: End-to-end verification
 
 #### Manual
 
-- [ ] 4.1 `bunx wrangler dev` starts without errors
-- [ ] 4.2 Save a link → terminal shows `[queue] consumed describe v1 for link <id>`
-- [ ] 4.3 No uncaught errors in wrangler dev output
-- [ ] 4.4 `bun run build` passes as final clean build
+- [x] 4.1 `bunx wrangler dev` starts without errors
+- [x] 4.2 Save a link → terminal shows `[queue] consumed describe v1 for link <id>`
+- [x] 4.3 No uncaught errors in wrangler dev output
+- [x] 4.4 `bun run build` passes as final clean build
