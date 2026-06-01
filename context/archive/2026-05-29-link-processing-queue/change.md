@@ -1,7 +1,8 @@
 ---
 change_id: link-processing-queue
 roadmap_id: F-02
-status: impl_reviewed
+status: archived
+archived_at: 2026-06-01T12:46:12Z
 created: 2026-05-29
 updated: 2026-06-01
 ---
