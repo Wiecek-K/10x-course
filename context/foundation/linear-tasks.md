@@ -70,7 +70,7 @@ All 8 active issues with Linear identifiers, `blockedBy` relations wired nativel
 |---|---|---|---|---|---|---|---|---|
 | TAB-5 | #2 | F-01 | `domain-data-foundation` | Links schema + RLS + minimal SSR API | A | Done | MVP Core | — |
 | TAB-6 | #3 | F-02 | `link-processing-queue` | Cloudflare Queue plumbing scaffold | B | Todo | MVP Core | — |
-| TAB-7 | #4 | S-01 | `bot-capture-to-inbox` | Bot capture to inbox | A | Todo | MVP Core | TAB-5 |
+| TAB-7 | #4 | S-01 | `bot-capture-to-inbox` | Bot capture to inbox | A | In Progress | MVP Core | TAB-5 |
 | TAB-8 | #5 | S-02 | `auto-description-pipeline` | Auto-description pipeline ⭐ | A | Backlog | MVP Core | TAB-5, TAB-6, TAB-7 |
 | TAB-9 | #6 | S-04 | `link-closure-flow` | Closure flow + per-link manual edit | C | Backlog | MVP Extended | TAB-5, TAB-7 |
 | TAB-10 | #7 | S-03 | `nl-search-on-links` | NL search on saved links | D | Backlog | MVP Extended | TAB-5, TAB-8 |

@@ -31,7 +31,7 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 | ----- | ------------------------------- | --------------------------------------------------------------------------------- | ---------------- | ------------------------- | -------- |
 | F-01  | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                | —                | NFR "Izolacja danych", Access Control | done     |
 | F-02  | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki    | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md | done     |
-| S-01  | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)    | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s" | proposed |
+| S-01  | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)    | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s" | in_progress |
 | S-02  | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core" | proposed |
 | S-04  | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01      | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
 | S-03  | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s               | F-01, S-02       | FR-007 (NL search), FR-009, US-02 | proposed |
@@ -117,7 +117,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
   - Platforma bota (Telegram MVP vs WhatsApp vs inny) — **Resolved: Telegram.** Dedykowana aplikacja mobilna z share sheet (system share menu) planowana jako osobny slice po MVP.
   - Identity binding messenger user ↔ Supabase user (pairing code? magic link?) — **Resolved: pairing code.** Użytkownik generuje kod w web app → wysyła do bota → bot zapisuje mapping `telegram_id → user_id`. Docelowo: dedykowana aplikacja mobilna z logowaniem przez Supabase zastąpi pairing code.
 - **Risk:** pierwszy user-facing slice — wprowadza bot setup, API do POST linków, identity binding i minimalny widok inboxu naraz. PRD nie ma literalnego US dla bota (US-01 jest desktop-only) — luka odnotowana w Open Roadmap Questions.
-- **Status:** proposed
+- **Status:** in_progress
 
 ### S-02: Auto-opis dla zapisanego linka
 
