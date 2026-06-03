@@ -360,9 +360,9 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [ ] 1.1 Migration applies cleanly: `bunx supabase db reset`
-- [ ] 1.2 Lint passes: `bun run lint`
-- [ ] 1.3 Build passes: `bun run build`
+- [x] 1.1 Migration applies cleanly: `bunx supabase db reset`
+- [x] 1.2 Lint passes: `bun run lint`
+- [x] 1.3 Build passes: `bun run build`
 
 #### Manual
 

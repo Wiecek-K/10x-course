@@ -2,6 +2,12 @@ import type { Database } from "@/db/database.types";
 import type { z } from "zod";
 import type { CreateLinkSchema, ListLinksQuerySchema } from "@/lib/schemas/links";
 
+export type PairingCode = Database["public"]["Tables"]["pairing_codes"]["Row"];
+export type PairingCodeInsert = Database["public"]["Tables"]["pairing_codes"]["Insert"];
+
+export type TelegramLink = Database["public"]["Tables"]["telegram_links"]["Row"];
+export type TelegramLinkInsert = Database["public"]["Tables"]["telegram_links"]["Insert"];
+
 export type JobType = "describe";
 
 export interface QueueMessage {
