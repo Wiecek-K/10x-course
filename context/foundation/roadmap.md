@@ -116,6 +116,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Unknowns:**
   - Platforma bota (Telegram MVP vs WhatsApp vs inny) — **Resolved: Telegram.** Dedykowana aplikacja mobilna z share sheet (system share menu) planowana jako osobny slice po MVP.
   - Identity binding messenger user ↔ Supabase user (pairing code? magic link?) — **Resolved: pairing code.** Użytkownik generuje kod w web app → wysyła do bota → bot zapisuje mapping `telegram_id → user_id`. Docelowo: dedykowana aplikacja mobilna z logowaniem przez Supabase zastąpi pairing code.
+  - Zapis linka przez webhook bota omija RLS (`auth.uid()` jest NULL przy server-to-server POST) — **Resolved (2026-06-03): service-role key.** Bot weryfikuje `telegram_id → user_id` z rejestru parowania, po czym wstawia link dedykowanym admin-clientem (`SUPABASE_SERVICE_ROLE_KEY`) zamkniętym w osobnym module używanym wyłącznie przez endpoint bota. **Dług techniczny — do zmiany w przyszłości:** docelowo zastąpić to funkcją Postgres `SECURITY DEFINER` (RPC), żeby przywilej żył w jednej wąskiej funkcji SQL zamiast w kluczu omijającym całe RLS. Wybór service-role podyktowany prostotą na MVP (`top_blocker: capacity`). Tracked: TAB-13 (Linear, low priority).
 - **Risk:** pierwszy user-facing slice — wprowadza bot setup, API do POST linków, identity binding i minimalny widok inboxu naraz. PRD nie ma literalnego US dla bota (US-01 jest desktop-only) — luka odnotowana w Open Roadmap Questions.
 - **Status:** in_progress
 
@@ -221,6 +222,10 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **FR-003: Import zakładek z HTML eksportu przeglądarki** — nice-to-have. Parked ze względu na `top_blocker: capacity` (3 tygodnie after-hours). Wraca jako kandydat po dogfoodingu jeśli czas pozwoli.
 - **FR-012: Dashboard aktywności per kategoria** — nice-to-have. PRD §Dashboard explicite: "jeśli nie starczy czasu w 3-tygodniowym MVP, dashboard wchodzi w sprint post-MVP". Model danych w F-01 + S-04 + S-06 zbiera surowce; widok dochodzi później.
 - **Cloudflare Builds CI auto-deploy-on-merge** — operacyjne, śledzone w `context/deployment/deploy-plan.md` jako pending. Poza zakresem feature roadmapy.
+- **Sterowanie opisem przy capture przez bota (rozwój S-01)** — user mógłby wpływać na micro-opis poleceniem/tekstem przy udostępnianiu linka. Open question: jedna wiadomość vs. wieloetapowa rozmowa z botem. Post-MVP; S-01 zapisuje tylko URL.
+- **Preferencja obsługi duplikatów (rozwój S-01)** — opcja w ustawieniach: co się dzieje gdy user wyśle duplikat URL (dopasowanie UX do preferencji). Wymaga researchu jakie zachowania userzy faktycznie preferują. Post-MVP; MVP zapisuje duplikaty bez sprawdzania.
+- **Testy automatyczne dla S-01 (follow-up po S-02)** — S-01 weryfikowany ręcznie (E2E checklist), bo repo nie ma jeszcze test runnera. Po wylądowaniu S-02 (które i tak postawi runner) wrócić i dołożyć unity Vitest na newralgiczną logikę bota: parsowanie URL, walidacja `secret_token`, resolve `telegram_id → user_id`. Wrażliwe, bo to ścieżka service-role omijająca RLS.
+- **Cron sprzątający `pairing_codes` (rozwój S-01)** — S-01 nie usuwa wierszy z `pairing_codes`; tokeny tylko wygasają logicznie (`expires_at`) i webhook je odrzuca, ale wiersze zostają w tabeli i akumulują się (każde kliknięcie „Connect Telegram" zostawia trwały wiersz — użyty albo wygasły). Na MVP nieszkodliwe (wiersze małe, indeks po `token`, jeden użytkownik). Post-MVP: scheduled Cloudflare Cron Trigger (albo `pg_cron`) kasujący `WHERE expires_at < now() OR used_at IS NOT NULL`. Tracked: TAB-14 (Linear, low priority; related: TAB-7).
 
 ## Done
 

@@ -76,8 +76,11 @@ All 8 active issues with Linear identifiers, `blockedBy` relations wired nativel
 | TAB-10 | #7 | S-03 | `nl-search-on-links` | NL search on saved links | D | Backlog | MVP Extended | TAB-5, TAB-8 |
 | TAB-11 | #8 | S-06 | `category-proposal-and-routing` | Category proposal, meta-instructions + routing | D | Backlog | MVP Extended | TAB-5, TAB-6, TAB-8 |
 | TAB-12 | #9 | S-05 | `extension-capture` | Browser extension capture | E | Todo | MVP Extended | TAB-5 |
+| TAB-13 | — | tech-debt | — | Migrate bot insert: service-role key → SECURITY DEFINER RPC | — | Backlog | — | — (related: TAB-7) |
+| TAB-14 | — | tech-debt | — | Cleanup cron for expired/used `pairing_codes` rows | — | Backlog | — | — (related: TAB-7) |
 
 ⭐ = north-star slice
+TAB-13 and TAB-14 are post-MVP tech-debt follow-ups from S-01 (not roadmap slices; low priority, GitHub-unmirrored).
 
 ## Issue body template
 

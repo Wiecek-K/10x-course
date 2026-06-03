@@ -54,6 +54,32 @@ List endpoints (`GET /api/links`) are exempt — an empty array is the correct, 
 
 ---
 
+## Sessionless (server-to-server) endpoints can't use the cookie client — RLS will block every write
+
+**Context**: Any endpoint with no Supabase cookie session — bot/webhook handlers, queue consumers (S-02), cron jobs, server-to-server callbacks.
+
+**Problem**: The cookie-based client (`src/lib/supabase.ts`) resolves `auth.uid()` from the request's session. A server-to-server POST has no session, so `auth.uid()` is `NULL` and **every** RLS policy scoped `auth.uid() = user_id` fails — `INSERT`/`UPDATE` affect 0 rows under a misleading success. You cannot write a user's row through the normal client from a sessionless context.
+
+**Rule**: For sessionless writes, choose one of two paths and isolate it:
+- **Service-role client** — a separate client built from `SUPABASE_SERVICE_ROLE_KEY` that bypasses RLS. Confine it to a single helper module (`src/lib/supabase-admin.ts`) imported only by the endpoint that needs it. **The `user_id` must be resolved from a trusted server-side mapping (e.g. `telegram_links.telegram_id → user_id`), never from anything the inbound payload claims.** The key bypasses *all* RLS — its blast radius is the whole DB if it leaks, so keep its surface tiny.
+- **`SECURITY DEFINER` Postgres function (RPC)** — the privilege lives in one narrow SQL function; the Worker calls it with the ordinary anon key, no master key in app code. Cleaner long-term; more DB work up front.
+
+**Decision for the bot (S-01)**: service-role, as the MVP-pragmatic choice; migrate to `SECURITY DEFINER` RPC post-MVP (Linear TAB-13). The trade-off and its tracking issue live in `roadmap.md` §S-01.
+
+**Applies to**: S-01 bot webhook insert, S-02 queue-consumer writes, S-06 categorization routing, and any future webhook/cron/consumer that writes on a user's behalf.
+
+---
+
+## Webhook response codes: reject forged with non-2xx, ack authentic with 200 (or the sender retries)
+
+**Context**: Inbound webhooks from providers that retry on non-2xx (Telegram, Stripe, GitHub, …).
+
+**Rule**: Split the two cases. A **forged/unauthenticated** request (failed shared-secret check, e.g. Telegram's `X-Telegram-Bot-Api-Secret-Token`) → return **`401`** so it's rejected. An **authentic** update you've received → return **`200`** even when the business outcome is "nothing to do" (expired token, unknown sender, no URL in the message); a non-2xx there makes the provider **redeliver the same update**, causing duplicate processing. Side effects (replies, inserts) happen as separate calls, not via the webhook's response body.
+
+**Applies to**: S-01 bot webhook; any future provider-webhook integration.
+
+---
+
 ## Generated files belong in ESLint `ignores`, not in the lint surface
 
 **Context**: Files produced by a code generator and committed to the repo — `worker-configuration.d.ts` (`wrangler types`), `src/db/database.types.ts` (Supabase type gen), and any future generated artifact.
@@ -68,3 +94,39 @@ List endpoints (`GET /api/links`) are exempt — an empty array is the correct, 
 ```
 
 **Applies to**: every generated, committed artifact — current (`wrangler types`, Supabase types) and future (OpenAPI clients, codegen'd SDKs, etc.). New binding in `wrangler.jsonc` → re-run `wrangler types` → confirm the file is already covered by `ignores`.
+
+---
+
+## RLS policy coverage must span every operation the app performs across all phases
+
+**Context**: Designing granular per-operation RLS policies for a new table, when the table is created in an early phase but written/mutated by code in later phases (e.g. `pairing_codes` created in Phase 1, mutated in Phase 2).
+
+**Problem**: This is a distinct failure mode from the cross-user and sessionless lessons above. Here it's the **legitimate owner**, on the authenticated cookie client, performing an operation for which **no policy was granted**. Postgres doesn't error — a missing `UPDATE`/`DELETE` policy means the statement matches no rows and silently reports **0 rows affected** under `200 OK`. The bug surfaces phases later than the table design: Phase 1 grants only `SELECT` + `INSERT` "because the app only reads and mints," then Phase 2 needs to expire/delete the user's own prior rows and that mutation silently no-ops. The intended invariant ("only the latest row is live") never holds, and nothing fails loudly.
+
+**Rule**: Before locking a table's policy set, enumerate **every** operation the application will perform on it across **all** planned phases — not just the operations the creating phase needs. For each (operation, role) the app will actually issue, there must be a matching policy, or the statement fails silently. If a later phase reveals a needed operation, add the policy in that phase's migration (or route the write through the service-role/admin client when it's genuinely a privileged, sessionless path — see the sessionless lesson). When you *deliberately* omit a policy (e.g. "rows are only ever burned by the service-role webhook, never by the user"), make sure no app code path on the ordinary client is expected to perform that operation — if one is, drop the requirement or grant the policy.
+
+**Applies to**: every new RLS table whose lifecycle spans multiple phases — `pairing_codes`/`telegram_links` (S-01), and any future table where the creating phase's policy set is narrower than what later phases need.
+
+---
+
+## Supabase Realtime broadcasts every WAL change regardless of writer; RLS governs only the subscriber's visibility
+
+**Context**: A browser island subscribed to Supabase Realtime `postgres_changes` on an RLS-protected table, where rows may be written by a **service-role** (RLS-bypassing) path — bot webhook (S-01), queue consumer (S-02), categorization routing (S-06).
+
+**Problem / non-obvious win**: It's natural to assume a row inserted by the service-role client (which bypasses RLS) won't reach a Realtime subscriber, or conversely that bypassing RLS on write also bypasses it on the stream. Neither is true. Realtime reads the **WAL**, so it broadcasts the change no matter which role wrote it. RLS is then applied to the **subscriber's** session token to decide who receives the event — the same `SELECT` policy that governs a normal read. Net effect: a service-role insert with the correct `user_id` is delivered to exactly the owning user's subscription and to no one else's.
+
+**Rule**: For a "server writes (service-role) → user's browser sees it live" flow you do **not** need any special Realtime trick beyond (1) adding the table to the `supabase_realtime` publication and (2) a correct per-user `SELECT` RLS policy. The browser must subscribe with the **authenticated** client (`createBrowserClient` carrying the user's JWT), filtered by `user_id`, so RLS scopes the stream. Do not weaken RLS or expose a privileged channel to make push work — the standard `SELECT` policy already does the filtering on the receive side.
+
+**Applies to**: S-01 inbox (bot service-role insert → Realtime push), S-02 (consumer writes description → live update), S-06 (routing), and any future background/service-role write surfaced live in the UI.
+
+---
+
+## A write path that bypasses the canonical API endpoint also bypasses its side effects
+
+**Context**: A feature inserts/updates domain rows through a path other than the established API endpoint — e.g. the bot webhook inserts into `links` via the admin client directly, instead of `POST /api/links`.
+
+**Problem**: Side effects wired into the canonical endpoint (queue enqueue, event emission, audit log, derived-field updates) live in that endpoint's handler, not in the table or a trigger. A second write path that goes straight to the table silently skips all of them. In S-01 this surfaced as: `POST /api/links` calls `enqueueLink(...)` after insert, but the bot's direct admin insert did not — so bot-captured links (the product's *primary* capture channel) would never enter the S-02 processing pipeline, while desktop links would. The divergence is invisible until the downstream consumer exists and you notice one source's rows are never processed.
+
+**Rule**: When introducing a write path that bypasses the canonical endpoint, audit what that endpoint does **after** the bare insert and replicate the relevant side effects (or move the shared side effect into a DB trigger / shared service function both paths call). List the endpoint's post-insert actions and decide per-action: replicate, or consciously defer with a tracked note. Don't assume "insert the row" is the whole job — the endpoint usually isn't just an insert.
+
+**Applies to**: S-01 bot webhook (must `enqueueLink` like `POST /api/links`), S-05 extension capture, and any future capture channel or background writer that doesn't go through the existing domain endpoint.
