@@ -20,7 +20,7 @@ F-01 is done and is the substrate:
 - The bot webhook is **server-to-server**: it has no Supabase cookie session, so `auth.uid()` is `NULL` and the `links`/`telegram_links` RLS policies can never pass through the normal client. The insert must run with a **service-role client** that bypasses RLS, with `user_id` resolved from the pairing mapping — never from anything the Telegram payload claims. (Conscious tech debt → `SECURITY DEFINER` RPC post-MVP; roadmap S-01 + Linear TAB-13.)
 - **Lesson `lessons.md` — phase-gate ordering**: a phase that changes `wrangler.jsonc "main"` must create the entrypoint in the same phase. Not triggered here — we add env vars via `astro:env`, not Worker bindings, so no `worker-configuration.d.ts` change.
 - **Lesson `lessons.md` — 404 for non-owned**: targets single-resource-by-id endpoints. None of the new endpoints fetch a row by id, so it does not apply; the rule still informs that RLS is a safety net, not an API contract — hence explicit auth on every new endpoint.
-- **Telegram delivers `telegram_id` for free** in every webhook update (`message.from.id`); the only hard problem is *binding* it to a `user_id`, which pairing solves once.
+- **Telegram delivers `telegram_id` for free** in every webhook update (`message.from.id`); the only hard problem is _binding_ it to a `user_id`, which pairing solves once.
 - **CLAUDE.md — strong typing**: narrow constrained columns in `src/types.ts`, cast at the query boundary. Applies to the new tables.
 
 ## Desired End State
@@ -49,8 +49,8 @@ Build bottom-up so each phase is independently verifiable: data + config substra
 
 ## Critical Implementation Details
 
-- **Trust boundary in the webhook**: the inserted `user_id` comes *only* from the `telegram_links` lookup keyed by `message.from.id`. Never read a user id from the message body. The service-role client is confined to a single helper module imported only by the bot endpoint.
-- **Webhook response codes vs Telegram retries**: Telegram retries on non-2xx. Return `401` for a failed secret check (we *want* forged requests rejected) and `200` for every handled/unhandled-but-authentic update (including "expired token", "unpaired", "no URL") so Telegram does not retry a delivered message. Bot replies are sent as a separate Bot API call, not in the webhook response body.
+- **Trust boundary in the webhook**: the inserted `user_id` comes _only_ from the `telegram_links` lookup keyed by `message.from.id`. Never read a user id from the message body. The service-role client is confined to a single helper module imported only by the bot endpoint.
+- **Webhook response codes vs Telegram retries**: Telegram retries on non-2xx. Return `401` for a failed secret check (we _want_ forged requests rejected) and `200` for every handled/unhandled-but-authentic update (including "expired token", "unpaired", "no URL") so Telegram does not retry a delivered message. Bot replies are sent as a separate Bot API call, not in the webhook response body.
 - **`telegram_id` width**: store as `bigint` — Telegram user ids exceed 32-bit range.
 - **Confirmation latency (NFR ≤2s)**: the capture path is a single mapping lookup + single insert, then one `sendMessage`. Keep it to those round-trips; do not block the reply on anything else.
 
@@ -71,6 +71,7 @@ Create the two pairing tables with RLS, regenerate DB types, add the domain type
 **Intent**: Persist the ephemeral pairing tokens and the permanent Telegram↔user mapping, both RLS-protected per user.
 
 **Contract**:
+
 - `public.pairing_codes`: `id uuid PK default gen_random_uuid()`, `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `token text NOT NULL UNIQUE`, `expires_at timestamptz NOT NULL`, `used_at timestamptz`, `created_at timestamptz NOT NULL default now()`. Index on `token`.
 - `public.telegram_links`: `telegram_id bigint PRIMARY KEY`, `user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`, `created_at timestamptz NOT NULL default now()`. Index on `user_id`.
 - RLS enabled on both. Policies: `pairing_codes` — `SELECT` + `INSERT` for `authenticated` where `auth.uid() = user_id` (web app mints/reads its own); no update/delete policy (token is burned by the service-role webhook, which bypasses RLS). `telegram_links` — `SELECT` for `authenticated` where `auth.uid() = user_id` (web shows "connected" state); no insert/update/delete policy (writes happen only via the service-role webhook). Follow the granular per-operation, per-role pattern from `20260529120000_create_links.sql`.
@@ -250,7 +251,7 @@ Give the dashboard a top-right account menu (email, sign-out, Connect Telegram w
 
 **Contract**: A React island seeded with the SSR-fetched `initialLinks` (prop from `dashboard.astro`; do **not** re-fetch on mount). It opens a Supabase Realtime subscription to `postgres_changes` (`event: 'INSERT'`, `schema: 'public'`, `table: 'links'`, `filter: 'user_id=eq.<userId>'`) and prepends pushed rows to the list. Use a browser Supabase client built with `createBrowserClient` from `@supabase/ssr` (`src/lib/supabase-browser.ts`), constructed from the `supabaseUrl` + `supabaseAnonKey` props. The browser client reads the session from the cookies `@supabase/ssr` already set at sign-in, so the Realtime connection carries the user's JWT and RLS scopes the stream to their own rows. `useLinks.ts` owns the subscription lifecycle: subscribe on mount, `supabase.removeChannel(channel)` on unmount. Each row shows the URL (linked), relative `created_at`, and a "pending" badge while `processing_status = 'pending'` (a small badge component — note `LibBadge.astro` does **not** exist yet, so build a minimal badge). Empty state: a friendly "your inbox is empty — send a link to your bot" message. Mount on `dashboard.astro`.
 
-**Why Realtime works across the trust boundary**: the bot inserts via the service-role client (bypassing RLS), but Realtime broadcasts every WAL change regardless of writer; RLS governs only the *subscriber's* visibility (`links_select_authenticated`), so a pushed row reaches exactly the owning user's subscription and no one else's. No polling, so the idle-request waste of the original ~5s poll disappears entirely.
+**Why Realtime works across the trust boundary**: the bot inserts via the service-role client (bypassing RLS), but Realtime broadcasts every WAL change regardless of writer; RLS governs only the _subscriber's_ visibility (`links_select_authenticated`), so a pushed row reaches exactly the owning user's subscription and no one else's. No polling, so the idle-request waste of the original ~5s poll disappears entirely.
 
 #### 4. Enable Realtime on `links`
 
@@ -360,29 +361,29 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly: `bunx supabase db reset`
-- [x] 1.2 Lint passes: `bun run lint`
-- [x] 1.3 Build passes: `bun run build`
+- [x] 1.1 Migration applies cleanly: `bunx supabase db reset` — 30e14a2
+- [x] 1.2 Lint passes: `bun run lint` — 30e14a2
+- [x] 1.3 Build passes: `bun run build` — 30e14a2
 
 #### Manual
 
-- [ ] 1.4 Both tables exist in Studio with RLS + expected policies
-- [ ] 1.5 RLS holds — other/anon user sees no rows
+- [x] 1.4 Both tables exist in Studio with RLS + expected policies
+- [x] 1.5 RLS holds — other/anon user sees no rows
 
 ### Phase 2: Pairing end-to-end (token API + webhook `/start`)
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `bun run lint`
-- [ ] 2.2 Build passes: `bun run build`
+- [x] 2.1 Lint passes: `bun run lint`
+- [x] 2.2 Build passes: `bun run build`
 
 #### Manual
 
-- [ ] 2.3 `POST /api/pairing` (signed in) returns deep-link + creates code row
-- [ ] 2.4 `POST /api/pairing` unauthenticated → `401`
-- [ ] 2.5 `/start <token>` with correct secret → mapping written, token burned, reply
-- [ ] 2.6 Wrong/absent secret header → `401`, no write
-- [ ] 2.7 Expired/used token → no mapping, "expired" reply
+- [x] 2.3 `POST /api/pairing` (signed in) returns deep-link + creates code row
+- [x] 2.4 `POST /api/pairing` unauthenticated → `401`
+- [x] 2.5 `/start <token>` with correct secret → mapping written, token burned, reply
+- [x] 2.6 Wrong/absent secret header → `401`, no write
+- [x] 2.7 Expired/used token → no mapping, "expired" reply
 
 ### Phase 3: Capture URL (webhook plain-message branch)
 
