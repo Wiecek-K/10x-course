@@ -404,17 +404,17 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [x] 4.1 Lint passes: `bun run lint`
-- [x] 4.2 Build passes: `bun run build`
-- [x] 4.3 Migration applies cleanly (Realtime publication): `bunx supabase db reset`
+- [x] 4.1 Lint passes: `bun run lint` — c497f01
+- [x] 4.2 Build passes: `bun run build` — c497f01
+- [x] 4.3 Migration applies cleanly (Realtime publication): `bunx supabase db reset` — c497f01
 
 #### Manual
 
-- [ ] 4.4 Account menu opens (email + sign-out work)
-- [ ] 4.5 Connect Telegram shows deep-link + countdown; expiry → regenerate works
-- [ ] 4.6 Paired state shows "Connected ✅" on reload
-- [ ] 4.7 Phone-sent URL appears in inbox near-instantly via Realtime push (no reload/poll), pending badge shown
-- [ ] 4.8 Second account's inbox does not receive first account's pushed rows (Realtime respects RLS)
+- [x] 4.4 Account menu opens (email + sign-out work) — c497f01
+- [x] 4.5 Connect Telegram shows deep-link + countdown; expiry → regenerate works — c497f01
+- [x] 4.6 Paired state shows "Connected ✅" on reload — c497f01
+- [x] 4.7 Phone-sent URL appears in inbox near-instantly via Realtime push (no reload/poll), pending badge shown — c497f01
+- [x] 4.8 Second account's inbox does not receive first account's pushed rows (Realtime respects RLS) — c497f01
 
 ### Phase 5: Bot registration + E2E verification
 
