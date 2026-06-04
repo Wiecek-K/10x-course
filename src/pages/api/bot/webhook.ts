@@ -2,6 +2,8 @@ import type { APIRoute } from "astro";
 import { TELEGRAM_WEBHOOK_SECRET } from "astro:env/server";
 import { createAdminClient } from "@/lib/supabase-admin";
 import { sendMessage, constantTimeEqual } from "@/lib/telegram";
+import { extractFirstUrl } from "@/lib/url";
+import { enqueueLink } from "@/lib/queue";
 
 export const prerender = false;
 
@@ -82,6 +84,45 @@ export const POST: APIRoute = async (context) => {
     return new Response(null, { status: 200 });
   }
 
-  // Phase 3 will handle plain-message capture; no-op for now.
+  const admin = createAdminClient();
+  if (!admin) {
+    await sendMessage(chatId, "Server error — try again later.");
+    return new Response(null, { status: 200 });
+  }
+
+  const { data: link } = await admin.from("telegram_links").select("user_id").eq("telegram_id", telegramId).single();
+
+  if (!link) {
+    await sendMessage(chatId, "I don't know you yet — open the app, Connect Telegram, then come back.");
+    return new Response(null, { status: 200 });
+  }
+
+  const url = extractFirstUrl(text);
+  if (!url) {
+    await sendMessage(chatId, "Send me a link to save.");
+    return new Response(null, { status: 200 });
+  }
+
+  const { data: inserted, error: insertError } = await admin
+    .from("links")
+    .insert({ user_id: link.user_id, url })
+    .select("id")
+    .single();
+
+  if (insertError) {
+    // eslint-disable-next-line no-console -- server-side error logging for Workers observability
+    console.error("webhook links insert failed:", insertError.message);
+    await sendMessage(chatId, "Try again.");
+    return new Response(null, { status: 200 });
+  }
+
+  try {
+    await enqueueLink(inserted.id, link.user_id);
+  } catch (err) {
+    // eslint-disable-next-line no-console -- non-fatal: link saved, queue failed
+    console.error("webhook enqueueLink failed:", err);
+  }
+
+  await sendMessage(chatId, "Saved ✅");
   return new Response(null, { status: 200 });
 };

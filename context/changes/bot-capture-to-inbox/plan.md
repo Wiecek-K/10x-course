@@ -389,16 +389,16 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `bun run lint`
-- [ ] 3.2 Build passes: `bun run build`
+- [x] 3.1 Lint passes: `bun run lint`
+- [x] 3.2 Build passes: `bun run build`
 
 #### Manual
 
-- [ ] 3.3 Paired sender's URL → `pending` link for correct user + "Saved ✅"
-- [ ] 3.4 Unpaired sender → pairing instruction, no row
-- [ ] 3.5 No-URL message → "send a link" reply, no row
-- [ ] 3.6 Trust boundary — link attributed to mapped user, not payload-claimed id
-- [ ] 3.7 Saved link is enqueued (queue consumer logs `[queue] consumed describe`)
+- [x] 3.3 Paired sender's URL → `pending` link for correct user + "Saved ✅"
+- [x] 3.4 Unpaired sender → pairing instruction, no row
+- [x] 3.5 No-URL message → "send a link" reply, no row
+- [x] 3.6 Trust boundary — link attributed to mapped user, not payload-claimed id
+- [x] 3.7 Saved link is enqueued (queue consumer logs `[queue] consumed describe`)
 
 ### Phase 4: Web UI — account menu pairing + inbox island
 
