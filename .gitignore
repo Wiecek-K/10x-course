@@ -48,6 +48,9 @@ supabase/snippets/
 
 # Playwright MCP session artifacts (snapshots, console logs)
 .playwright-mcp/
+# Playwright screenshots and test artifacts (agents save here, never in project root)
+playwright-artifacts/
+test-results/
 
 # E2E test credentials (copy from .env.test.example)
 .env.test
