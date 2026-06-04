@@ -374,16 +374,16 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [x] 2.1 Lint passes: `bun run lint`
-- [x] 2.2 Build passes: `bun run build`
+- [x] 2.1 Lint passes: `bun run lint` — b495a4f
+- [x] 2.2 Build passes: `bun run build` — b495a4f
 
 #### Manual
 
-- [x] 2.3 `POST /api/pairing` (signed in) returns deep-link + creates code row
-- [x] 2.4 `POST /api/pairing` unauthenticated → `401`
-- [x] 2.5 `/start <token>` with correct secret → mapping written, token burned, reply
-- [x] 2.6 Wrong/absent secret header → `401`, no write
-- [x] 2.7 Expired/used token → no mapping, "expired" reply
+- [x] 2.3 `POST /api/pairing` (signed in) returns deep-link + creates code row — b495a4f
+- [x] 2.4 `POST /api/pairing` unauthenticated → `401` — b495a4f
+- [x] 2.5 `/start <token>` with correct secret → mapping written, token burned, reply — b495a4f
+- [x] 2.6 Wrong/absent secret header → `401`, no write — b495a4f
+- [x] 2.7 Expired/used token → no mapping, "expired" reply — b495a4f
 
 ### Phase 3: Capture URL (webhook plain-message branch)
 
