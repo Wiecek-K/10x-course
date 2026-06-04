@@ -3,7 +3,7 @@ change_id: bot-capture-to-inbox
 title: Bot capture to inbox (Telegram → link in inbox + minimal inbox view)
 status: implementing
 created: 2026-06-03
-updated: 2026-06-03
+updated: 2026-06-04
 plan: planned
 archived_at: null
 ---

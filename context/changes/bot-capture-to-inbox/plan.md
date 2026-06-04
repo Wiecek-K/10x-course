@@ -389,24 +389,24 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [x] 3.1 Lint passes: `bun run lint`
-- [x] 3.2 Build passes: `bun run build`
+- [x] 3.1 Lint passes: `bun run lint` — da2adb3
+- [x] 3.2 Build passes: `bun run build` — da2adb3
 
 #### Manual
 
-- [x] 3.3 Paired sender's URL → `pending` link for correct user + "Saved ✅"
-- [x] 3.4 Unpaired sender → pairing instruction, no row
-- [x] 3.5 No-URL message → "send a link" reply, no row
-- [x] 3.6 Trust boundary — link attributed to mapped user, not payload-claimed id
-- [x] 3.7 Saved link is enqueued (queue consumer logs `[queue] consumed describe`)
+- [x] 3.3 Paired sender's URL → `pending` link for correct user + "Saved ✅" — da2adb3
+- [x] 3.4 Unpaired sender → pairing instruction, no row — da2adb3
+- [x] 3.5 No-URL message → "send a link" reply, no row — da2adb3
+- [x] 3.6 Trust boundary — link attributed to mapped user, not payload-claimed id — da2adb3
+- [x] 3.7 Saved link is enqueued (queue consumer logs `[queue] consumed describe`) — da2adb3
 
 ### Phase 4: Web UI — account menu pairing + inbox island
 
 #### Automated
 
-- [ ] 4.1 Lint passes: `bun run lint`
-- [ ] 4.2 Build passes: `bun run build`
-- [ ] 4.3 Migration applies cleanly (Realtime publication): `bunx supabase db reset`
+- [x] 4.1 Lint passes: `bun run lint`
+- [x] 4.2 Build passes: `bun run build`
+- [x] 4.3 Migration applies cleanly (Realtime publication): `bunx supabase db reset`
 
 #### Manual
 
