@@ -17,7 +17,7 @@ top_blocker: capacity
 
 ## Vision recap
 
-Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków tygodniowo i traci do nich dostęp — istniejące narzędzia (Pocket, Raindrop, Obsidian) zakładają że *najpierw* zaprojektujesz system kategorii, *potem* zaczniesz zapisywać. tabzero odwraca tę kolejność: capture jest natychmiastowy i zero-friction, a struktura wyłania się automatycznie w tle (auto-opis przy zapisie, propozycja kategorii po zebraniu bazy). Wedge tego produktu — ta jedna cecha, która jeśli zniknie, czyni go nieodróżnialnym od generycznego "save-for-later" — to fakt, że użytkownik nigdy nie projektuje systemu, a mimo to po tygodniach znajduje to, czego szuka.
+Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków tygodniowo i traci do nich dostęp — istniejące narzędzia (Pocket, Raindrop, Obsidian) zakładają że _najpierw_ zaprojektujesz system kategorii, _potem_ zaczniesz zapisywać. tabzero odwraca tę kolejność: capture jest natychmiastowy i zero-friction, a struktura wyłania się automatycznie w tle (auto-opis przy zapisie, propozycja kategorii po zebraniu bazy). Wedge tego produktu — ta jedna cecha, która jeśli zniknie, czyni go nieodróżnialnym od generycznego "save-for-later" — to fakt, że użytkownik nigdy nie projektuje systemu, a mimo to po tygodniach znajduje to, czego szuka.
 
 ## North star
 
@@ -27,16 +27,16 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 
 ## At a glance
 
-| ID    | Change ID                       | Outcome (user can …)                                                              | Prerequisites    | PRD refs                  | Status   |
-| ----- | ------------------------------- | --------------------------------------------------------------------------------- | ---------------- | ------------------------- | -------- |
-| F-01  | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                | —                | NFR "Izolacja danych", Access Control | done     |
-| F-02  | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki    | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md | done     |
-| S-01  | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)    | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s" | in_progress |
-| S-02  | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core" | proposed |
-| S-04  | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01      | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
-| S-03  | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s               | F-01, S-02       | FR-007 (NL search), FR-009, US-02 | proposed |
-| S-06  | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary | proposed |
-| S-05  | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach          | F-01             | FR-001, FR-010, US-01     | proposed |
+| ID   | Change ID                       | Outcome (user can …)                                                                                                                     | Prerequisites    | PRD refs                                                                       | Status      |
+| ---- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ | ----------- |
+| F-01 | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                                                                       | —                | NFR "Izolacja danych", Access Control                                          | done        |
+| F-02 | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki                                                          | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md                            | done        |
+| S-01 | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)                                                           | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s"                               | in_progress |
+| S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | proposed    |
+| S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed    |
+| S-03 | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s                                                                       | F-01, S-02       | FR-007 (NL search), FR-009, US-02                                              | proposed    |
+| S-06 | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane              | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary            | proposed    |
+| S-05 | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach                                                                 | F-01             | FR-001, FR-010, US-01                                                          | proposed    |
 
 ## Dependency graph
 
@@ -55,13 +55,13 @@ Czytanie: strzałka A → B oznacza "A jest prerequisite B". F-01 i F-02 mogą i
 
 Nawigacja — grupuje itemy dzielące łańcuch Prerequisites. Kanoniczne uporządkowanie żyje w grafie zależności poniżej; ta tabela to proponowana kolejność czytania w poprzek równoległych torów.
 
-| Stream | Theme                  | Chain                          | Note                                                                          |
-| ------ | ---------------------- | ------------------------------ | ----------------------------------------------------------------------------- |
-| A      | Wedge proof            | `F-01 → S-01 → S-02`           | Trzon dowodu inwersji; sekwencjonowane tak wcześnie jak graf pozwala — to dźwignia dla `main_goal: market-feedback`. |
-| B      | Async backbone         | `F-02`                         | Foundation podpięcia kolejki; dołącza do A przy `S-02`. Może iść równolegle z `F-01`. |
-| C      | Library interaction    | `S-04`                         | Closure + manual edit; dołącza do A przy `S-01`. Niezależne od opisów — można rozwijać równolegle z `S-02`. |
-| D      | Retrieval & structure  | `S-03 / S-06`                  | Obie dołączają do A przy `S-02`; po wylądowaniu opisów działają równolegle. |
-| E      | Extension surface      | `S-05`                         | Dołącza do A przy `F-01`; świadomie deferred za dowodem przez bota.           |
+| Stream | Theme                 | Chain                | Note                                                                                                                 |
+| ------ | --------------------- | -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| A      | Wedge proof           | `F-01 → S-01 → S-02` | Trzon dowodu inwersji; sekwencjonowane tak wcześnie jak graf pozwala — to dźwignia dla `main_goal: market-feedback`. |
+| B      | Async backbone        | `F-02`               | Foundation podpięcia kolejki; dołącza do A przy `S-02`. Może iść równolegle z `F-01`.                                |
+| C      | Library interaction   | `S-04`               | Closure + manual edit; dołącza do A przy `S-01`. Niezależne od opisów — można rozwijać równolegle z `S-02`.          |
+| D      | Retrieval & structure | `S-03 / S-06`        | Obie dołączają do A przy `S-02`; po wylądowaniu opisów działają równolegle.                                          |
+| E      | Extension surface     | `S-05`               | Dołącza do A przy `F-01`; świadomie deferred za dowodem przez bota.                                                  |
 
 ## Baseline
 
@@ -186,21 +186,21 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Unknowns:**
   - OSS fork start point: Obsidian Web Clipper vs MarkDownload (oba MIT, oba w PRD socrates FR-001) — Owner: user. Block: no.
   - Dystrybucja: Chrome unpacked vs Web Store (PRD socrates: unpacked OK na MVP) — Owner: user. Block: no.
-- **Risk:** extension dev to nowe terytorium (sygnał z `top_blocker: capacity` — patrz też alternatywa `skills` jaka była rozważana). OSS fork adaptacja może odsłonić niespodziewaną pracę. Świadomie sekwencjonowane *za* dowodem przez bota — gdyby capacity zabrakło, extension wpada do Parked, bo bot pokrywa kanał capture na MVP.
+- **Risk:** extension dev to nowe terytorium (sygnał z `top_blocker: capacity` — patrz też alternatywa `skills` jaka była rozważana). OSS fork adaptacja może odsłonić niespodziewaną pracę. Świadomie sekwencjonowane _za_ dowodem przez bota — gdyby capacity zabrakło, extension wpada do Parked, bo bot pokrywa kanał capture na MVP.
 - **Status:** proposed
 
 ## Backlog Handoff
 
-| Roadmap ID | Change ID                       | Suggested issue title                                            | Ready for `/10x-plan` | Notes |
-| ---------- | ------------------------------- | ---------------------------------------------------------------- | --------------------- | ----- |
-| F-01       | `domain-data-foundation`        | Schema domeny `links` + RLS per user_id + minimalne SSR API      | yes                   | Run `/10x-plan domain-data-foundation` |
-| F-02       | `link-processing-queue`         | Cloudflare Queue `tabzero-link-processing` + producer/consumer scaffold | yes             | Run `/10x-plan link-processing-queue` — może iść równolegle z F-01 |
-| S-01       | `bot-capture-to-inbox`          | Bot capture (Telegram MVP): URL → inbox + minimalny widok inboxu | no                    | Blokada: prereq F-01. Resolve `/10x-plan` po F-01. |
-| S-02       | `auto-description-pipeline`     | 3-tier scraping + LLM micro-opis (BYOK) + visible processing state | no                  | Blokada: prereqs F-01, F-02, S-01. Najcięższy slice — rozważ podział w /10x-plan. |
-| S-04       | `link-closure-flow`             | 4-stanowy closure flow + visit tracking + manual edit            | no                    | Blokada: prereqs F-01, S-01. Można w parallel z S-02. |
-| S-03       | `nl-search-on-links`            | NL search po micro-opisach z latencją ≤5s                        | no                    | Blokada: prereqs F-01, S-02 (opis = corpus). |
-| S-06       | `category-proposal-and-routing` | Propozycja kategorii z predefined templates + meta-instrukcje + auto-routing | no        | Blokada: prereqs F-01, F-02, S-02. Secondary criterion. |
-| S-05       | `extension-capture`             | Browser extension capture (fork z OSS: Web Clipper / MarkDownload) | no                  | Blokada: prereq F-01. Świadomie deferred za dowodem bota. |
+| Roadmap ID | Change ID                       | Suggested issue title                                                        | Ready for `/10x-plan` | Notes                                                                             |
+| ---------- | ------------------------------- | ---------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------- |
+| F-01       | `domain-data-foundation`        | Schema domeny `links` + RLS per user_id + minimalne SSR API                  | yes                   | Run `/10x-plan domain-data-foundation`                                            |
+| F-02       | `link-processing-queue`         | Cloudflare Queue `tabzero-link-processing` + producer/consumer scaffold      | yes                   | Run `/10x-plan link-processing-queue` — może iść równolegle z F-01                |
+| S-01       | `bot-capture-to-inbox`          | Bot capture (Telegram MVP): URL → inbox + minimalny widok inboxu             | no                    | Blokada: prereq F-01. Resolve `/10x-plan` po F-01.                                |
+| S-02       | `auto-description-pipeline`     | 3-tier scraping + LLM micro-opis (BYOK) + visible processing state           | no                    | Blokada: prereqs F-01, F-02, S-01. Najcięższy slice — rozważ podział w /10x-plan. |
+| S-04       | `link-closure-flow`             | 4-stanowy closure flow + visit tracking + manual edit                        | no                    | Blokada: prereqs F-01, S-01. Można w parallel z S-02.                             |
+| S-03       | `nl-search-on-links`            | NL search po micro-opisach z latencją ≤5s                                    | no                    | Blokada: prereqs F-01, S-02 (opis = corpus).                                      |
+| S-06       | `category-proposal-and-routing` | Propozycja kategorii z predefined templates + meta-instrukcje + auto-routing | no                    | Blokada: prereqs F-01, F-02, S-02. Secondary criterion.                           |
+| S-05       | `extension-capture`             | Browser extension capture (fork z OSS: Web Clipper / MarkDownload)           | no                    | Blokada: prereq F-01. Świadomie deferred za dowodem bota.                         |
 
 ## Open Roadmap Questions
 
@@ -226,6 +226,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Preferencja obsługi duplikatów (rozwój S-01)** — opcja w ustawieniach: co się dzieje gdy user wyśle duplikat URL (dopasowanie UX do preferencji). Wymaga researchu jakie zachowania userzy faktycznie preferują. Post-MVP; MVP zapisuje duplikaty bez sprawdzania.
 - **Testy automatyczne dla S-01 (follow-up po S-02)** — S-01 weryfikowany ręcznie (E2E checklist), bo repo nie ma jeszcze test runnera. Po wylądowaniu S-02 (które i tak postawi runner) wrócić i dołożyć unity Vitest na newralgiczną logikę bota: parsowanie URL, walidacja `secret_token`, resolve `telegram_id → user_id`. Wrażliwe, bo to ścieżka service-role omijająca RLS.
 - **Cron sprzątający `pairing_codes` (rozwój S-01)** — S-01 nie usuwa wierszy z `pairing_codes`; tokeny tylko wygasają logicznie (`expires_at`) i webhook je odrzuca, ale wiersze zostają w tabeli i akumulują się (każde kliknięcie „Connect Telegram" zostawia trwały wiersz — użyty albo wygasły). Na MVP nieszkodliwe (wiersze małe, indeks po `token`, jeden użytkownik). Post-MVP: scheduled Cloudflare Cron Trigger (albo `pg_cron`) kasujący `WHERE expires_at < now() OR used_at IS NOT NULL`. Tracked: TAB-14 (Linear, low priority; related: TAB-7).
+- **Dev-tooling: katalog wyjściowy Playwright MCP** — zrzuty ekranu z Playwright MCP lądują w roocie repo (gołe nazwy plików + brak `--output-dir` na serwerze pluginu `playwright@claude-plugins-official`), mimo że `.gitignore` przewiduje `playwright-artifacts/` — ignorowany jest katalog, nie cwd. Naprawa: przypiąć `--output-dir` na `playwright-artifacts/` + konwencja w `CLAUDE.md` (agenci podają ścieżki bezwzględne pod `playwright-artifacts/`, nigdy gołych nazw). Operacyjne, poza zakresem feature roadmapy. Niska trudność, ale dług narasta i przeszkadza w bieżącym developmencie — podniesiony priorytet. Tracked: TAB-15 (Linear, medium priority); change: `context/changes/playwright-mcp-output-dir/`.
 
 ## Done
 
