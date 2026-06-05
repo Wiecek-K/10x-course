@@ -420,12 +420,12 @@ Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_link
 
 #### Automated
 
-- [x] 5.1 Lint passes: `bun run lint`
-- [x] 5.2 Build passes: `bun run build`
-- [x] 5.3 `getWebhookInfo` shows correct URL + draining updates
+- [x] 5.1 Lint passes: `bun run lint` — 17138be
+- [x] 5.2 Build passes: `bun run build` — 17138be
+- [x] 5.3 `getWebhookInfo` shows correct URL + draining updates — 17138be
 
 #### Manual
 
-- [x] 5.4 Full E2E checklist passes against a real bot — see `e2e-checklist.md` (§§1–9 all pass)
-- [x] 5.5 Confirmation latency ≤2s observed
-- [x] 5.6 Second account cannot see first account's links — Realtime isolation verified (§9)
+- [x] 5.4 Full E2E checklist passes against a real bot — see `e2e-checklist.md` (§§1–9 all pass) — 17138be
+- [x] 5.5 Confirmation latency ≤2s observed — 17138be
+- [x] 5.6 Second account cannot see first account's links — Realtime isolation verified (§9) — 17138be
