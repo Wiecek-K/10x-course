@@ -135,6 +135,34 @@ List endpoints (`GET /api/links`) are exempt — an empty array is the correct, 
 
 ---
 
+## Supabase Realtime `SUBSCRIBED` does not mean events will flow — JWT must be verified
+
+**Context**: A React island using `createBrowserClient` from `@supabase/ssr` subscribing to `postgres_changes`.
+
+**Problem**: The channel reaches `SUBSCRIBED` even when the browser client's JWT is absent from the channel join. Root cause (confirmed in S-01, production): `@supabase/ssr`'s `createBrowserClient` restores the session from cookies **asynchronously**, but code that calls `.subscribe()` synchronously inside `useEffect` joins the socket **before** that restore finishes — so the channel authenticates as anon (`apikey` only). Realtime then evaluates RLS with `auth.uid() = NULL`, fails every `auth.uid() = user_id` policy, and silently delivers nothing. `SUBSCRIBED` confirms only that the WebSocket joined, not that RLS authorizes the stream. This is a **browser-side** concern — it has nothing to do with the Cloudflare Workers SSR runtime; the WebSocket is opened client-side.
+
+**Rule**: Establish auth **before** subscribing — not as conditional troubleshooting. In the effect, `await supabase.auth.getSession()`, then `await supabase.realtime.setAuth(session?.access_token)`, and only then build + `.subscribe()` the channel. `getSession()` awaits the cookie restore (cookies are JS-readable by `@supabase/ssr` design — no `httpOnly`), making the join deterministic; token refresh thereafter is wired automatically by the client. Guard the async body against unmount and remove the channel in cleanup. Canonical implementation: `src/components/hooks/useLinks.ts`. If events still don't flow:
+
+1. Confirm the table is in the `supabase_realtime` publication (`bunx supabase migration list` — every local migration must be on remote).
+2. Confirm `getSession()` returns a non-null `session` (otherwise the client is anonymous).
+3. Temporarily drop the row filter to isolate auth vs. filter-expression issues.
+
+**Applies to**: S-01 inbox island, S-02 description-update push, and any future Realtime island in this project.
+
+---
+
+## `wrangler deploy` does not rebuild — always run `bun run build` first
+
+`bunx wrangler deploy` deploys whatever is in `dist/`. It does NOT run `astro build` first. If you deploy without rebuilding, the production Worker will serve stale JS bundles (old content-hashed filenames), and code changes silently won't appear.
+
+**Rule**: Always run `bun run build && bunx wrangler deploy` as the deploy sequence. Never run `wrangler deploy` alone after a code change.
+
+**How to spot the bug**: Deployed JS bundle filename hash matches the old build; source code changes are absent from the live bundle; `grep <changed-string> dist/**/*.js` returns nothing.
+
+**Applies to**: every deploy of this project — CI, manual, hotfix. If a `deploy` npm script is added to `package.json` in the future, it must chain `astro build && wrangler deploy`.
+
+---
+
 ## Astro server env vars must use `access: "secret"`, never `access: "public"`
 
 **Context**: Declaring server-side env fields in `astro.config.mjs` `env.schema` — any `envField` with `context: "server"`.

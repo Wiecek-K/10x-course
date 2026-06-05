@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser";
 import type { Link } from "@/types";
 
@@ -7,24 +8,35 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
 
   useEffect(() => {
     const supabase = createBrowserSupabaseClient(supabaseUrl, supabaseAnonKey);
-    const channel = supabase
-      .channel("inbox-inserts")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "links",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          setLinks((prev) => [payload.new as Link, ...prev]);
-        },
-      )
-      .subscribe();
+    let channel: RealtimeChannel | undefined;
+    const state = { cancelled: false };
+
+    void (async () => {
+      // Restore the session from cookies, then attach the user JWT to the
+      // Realtime socket BEFORE subscribing — otherwise the channel joins as
+      // anon and the links SELECT RLS policy (auth.uid() = user_id) drops
+      // every INSERT event while still reporting SUBSCRIBED.
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      await supabase.realtime.setAuth(session?.access_token);
+      if (state.cancelled) return;
+
+      channel = supabase
+        .channel("inbox-inserts")
+        .on(
+          "postgres_changes",
+          { event: "INSERT", schema: "public", table: "links", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            setLinks((prev) => [payload.new as Link, ...prev]);
+          },
+        )
+        .subscribe();
+    })();
 
     return () => {
-      void supabase.removeChannel(channel);
+      state.cancelled = true;
+      if (channel) void supabase.removeChannel(channel);
     };
   }, [userId, supabaseUrl, supabaseAnonKey]);
 
