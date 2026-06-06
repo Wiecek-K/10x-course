@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-06-01
+updated: 2026-06-06
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -27,16 +27,16 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 
 ## At a glance
 
-| ID   | Change ID                       | Outcome (user can …)                                                                                                                     | Prerequisites    | PRD refs                                                                       | Status      |
-| ---- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ | ----------- |
-| F-01 | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                                                                       | —                | NFR "Izolacja danych", Access Control                                          | done        |
-| F-02 | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki                                                          | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md                            | done        |
-| S-01 | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)                                                           | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s"                               | in_progress |
-| S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | proposed    |
-| S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed    |
-| S-03 | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s                                                                       | F-01, S-02       | FR-007 (NL search), FR-009, US-02                                              | proposed    |
-| S-06 | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane              | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary            | proposed    |
-| S-05 | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach                                                                 | F-01             | FR-001, FR-010, US-01                                                          | proposed    |
+| ID   | Change ID                       | Outcome (user can …)                                                                                                                     | Prerequisites    | PRD refs                                                                       | Status   |
+| ---- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------ | -------- |
+| F-01 | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                                                                       | —                | NFR "Izolacja danych", Access Control                                          | done     |
+| F-02 | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki                                                          | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md                            | done     |
+| S-01 | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)                                                           | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s"                               | done     |
+| S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | proposed |
+| S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
+| S-03 | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s                                                                       | F-01, S-02       | FR-007 (NL search), FR-009, US-02                                              | proposed |
+| S-06 | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane              | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary            | proposed |
+| S-05 | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach                                                                 | F-01             | FR-001, FR-010, US-01                                                          | proposed |
 
 ## Dependency graph
 
@@ -118,7 +118,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
   - Identity binding messenger user ↔ Supabase user (pairing code? magic link?) — **Resolved: pairing code.** Użytkownik generuje kod w web app → wysyła do bota → bot zapisuje mapping `telegram_id → user_id`. Docelowo: dedykowana aplikacja mobilna z logowaniem przez Supabase zastąpi pairing code.
   - Zapis linka przez webhook bota omija RLS (`auth.uid()` jest NULL przy server-to-server POST) — **Resolved (2026-06-03): service-role key.** Bot weryfikuje `telegram_id → user_id` z rejestru parowania, po czym wstawia link dedykowanym admin-clientem (`SUPABASE_SERVICE_ROLE_KEY`) zamkniętym w osobnym module używanym wyłącznie przez endpoint bota. **Dług techniczny — do zmiany w przyszłości:** docelowo zastąpić to funkcją Postgres `SECURITY DEFINER` (RPC), żeby przywilej żył w jednej wąskiej funkcji SQL zamiast w kluczu omijającym całe RLS. Wybór service-role podyktowany prostotą na MVP (`top_blocker: capacity`). Tracked: TAB-13 (Linear, low priority).
 - **Risk:** pierwszy user-facing slice — wprowadza bot setup, API do POST linków, identity binding i minimalny widok inboxu naraz. PRD nie ma literalnego US dla bota (US-01 jest desktop-only) — luka odnotowana w Open Roadmap Questions.
-- **Status:** in_progress
+- **Status:** done
 
 ### S-02: Auto-opis dla zapisanego linka
 
@@ -234,3 +234,4 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 
 - **F-01: (foundation) schemat domeny dla `links` (URL, nullable `micro_description`, `status` z domyślnym `inbox`, `last_visited`, `created_at`, `user_id`) z RLS per user_id; minimalne SSR API do create/read linka. Brak UI, brak kategorii, brak lifecycle event log — to ma sens dopiero w S-04/S-06.** — Archived 2026-05-31 → `context/archive/2026-05-29-domain-data-foundation/`. Lesson: —.
 - **F-02: (foundation) kolejka `tabzero-link-processing` podpięta w `wrangler.jsonc`; helper producer importowalny z API; minimalny consumer Worker który ack'uje jobs (jeszcze nic nie robi). Brak scrapingu, brak LLM calls — to wszystko jest w S-02.** — Archived 2026-06-01 → `context/archive/2026-05-29-link-processing-queue/`. Lesson: —.
+- **S-01: użytkownik wysyła URL do bota w komunikatorze; bot odpowiada potwierdzeniem w ≤2s; link pojawia się w inboxie web app (jako URL, opis przyjdzie z S-02).** — Archived 2026-06-06 → `context/archive/2026-06-03-bot-capture-to-inbox/`. Lesson: —.

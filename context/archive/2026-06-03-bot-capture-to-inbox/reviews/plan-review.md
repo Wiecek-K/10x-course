@@ -1,4 +1,5 @@
 <!-- PLAN-REVIEW-REPORT -->
+
 # Plan Review: Bot capture to inbox (S-01)
 
 - **Plan**: `context/changes/bot-capture-to-inbox/plan.md`
@@ -9,13 +10,13 @@
 
 ## Verdicts
 
-| Dimension | Verdict (initial) | After fixes |
-|-----------|-------------------|-------------|
-| End-State Alignment | PASS | PASS |
-| Lean Execution | PASS | PASS |
-| Architectural Fitness | FAIL (F1) | PASS |
-| Blind Spots | WARNING (F2, F3) | PASS |
-| Plan Completeness | PASS | PASS |
+| Dimension             | Verdict (initial) | After fixes |
+| --------------------- | ----------------- | ----------- |
+| End-State Alignment   | PASS              | PASS        |
+| Lean Execution        | PASS              | PASS        |
+| Architectural Fitness | FAIL (F1)         | PASS        |
+| Blind Spots           | WARNING (F2, F3)  | PASS        |
+| Plan Completeness     | PASS              | PASS        |
 
 ## Grounding
 

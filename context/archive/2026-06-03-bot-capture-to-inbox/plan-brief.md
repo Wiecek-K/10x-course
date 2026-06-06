@@ -17,20 +17,20 @@ A paired user sends any message containing a URL to the bot and gets "Saved ✅"
 
 ## Key Decisions Made
 
-| Decision | Choice | Why | Source |
-| --- | --- | --- | --- |
-| Bot integration | Telegram webhook + raw `fetch` | Zero deps, fits Workers + capacity blocker | Plan |
-| Identity binding | Deep-link `t.me/<bot>?start=<token>` | One-click setup, strong token, no manual code | Plan |
-| Link insert (no session) | Service-role client, RLS bypass | Simplest for MVP; webhook has no `auth.uid()` | Roadmap/TAB-13 |
-| → long-term replacement | `SECURITY DEFINER` RPC | Confine privilege to one SQL function | Roadmap/TAB-13 |
-| Webhook auth | `secret_token` header + known-`telegram_id` gate | Native Telegram mechanism, defense-in-depth | Plan |
-| Data model | `pairing_codes` (ephemeral) + `telegram_links` (permanent) | Clean split of one-time token vs lasting mapping | Plan |
-| Unpaired sender | Refuse + instruct; don't store | No orphaned links; clear onboarding | Plan |
-| Duplicates | Save every time, no dedup | Some users value the signal; settings-based dedup is post-MVP | Plan |
-| URL extraction | First http(s) URL in the message | Share-sheets append titles/text | Plan |
-| Inbox | React island, auto-refresh | Phone-sent link appears on desktop without F5 | Plan |
-| Pairing UI | Top-right account menu popover | Email + sign-out + Connect Telegram + regenerate | Plan |
-| Verification | Manual E2E now; Vitest after S-02 | No test runner in repo yet | Roadmap |
+| Decision                 | Choice                                                     | Why                                                           | Source         |
+| ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------- | -------------- |
+| Bot integration          | Telegram webhook + raw `fetch`                             | Zero deps, fits Workers + capacity blocker                    | Plan           |
+| Identity binding         | Deep-link `t.me/<bot>?start=<token>`                       | One-click setup, strong token, no manual code                 | Plan           |
+| Link insert (no session) | Service-role client, RLS bypass                            | Simplest for MVP; webhook has no `auth.uid()`                 | Roadmap/TAB-13 |
+| → long-term replacement  | `SECURITY DEFINER` RPC                                     | Confine privilege to one SQL function                         | Roadmap/TAB-13 |
+| Webhook auth             | `secret_token` header + known-`telegram_id` gate           | Native Telegram mechanism, defense-in-depth                   | Plan           |
+| Data model               | `pairing_codes` (ephemeral) + `telegram_links` (permanent) | Clean split of one-time token vs lasting mapping              | Plan           |
+| Unpaired sender          | Refuse + instruct; don't store                             | No orphaned links; clear onboarding                           | Plan           |
+| Duplicates               | Save every time, no dedup                                  | Some users value the signal; settings-based dedup is post-MVP | Plan           |
+| URL extraction           | First http(s) URL in the message                           | Share-sheets append titles/text                               | Plan           |
+| Inbox                    | React island, auto-refresh                                 | Phone-sent link appears on desktop without F5                 | Plan           |
+| Pairing UI               | Top-right account menu popover                             | Email + sign-out + Connect Telegram + regenerate              | Plan           |
+| Verification             | Manual E2E now; Vitest after S-02                          | No test runner in repo yet                                    | Roadmap        |
 
 ## Scope
 
@@ -44,13 +44,13 @@ Two identities nobody holds together — web knows `user_id` (cookie), Telegram 
 
 ## Phases at a Glance
 
-| Phase | What it delivers | Key risk |
-| --- | --- | --- |
-| 1. Data + config | `pairing_codes` + `telegram_links` (RLS), types, secrets, admin client | RLS policy correctness on the new tables |
-| 2. Pairing end-to-end | `POST /api/pairing` + webhook `/start` → mapping written | Webhook auth + token consumption correctness |
-| 3. Capture URL | Webhook plain-message → `pending` link; unpaired handling | Trust boundary: attribute link to mapped user only |
-| 4. Web UI | Account-menu pairing (expiry/regenerate) + auto-refresh inbox | Token-expiry UX; island state |
-| 5. Registration + E2E | `setWebhook` + secrets + manual E2E checklist | External setup; ≤2s latency; data isolation |
+| Phase                 | What it delivers                                                       | Key risk                                           |
+| --------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- |
+| 1. Data + config      | `pairing_codes` + `telegram_links` (RLS), types, secrets, admin client | RLS policy correctness on the new tables           |
+| 2. Pairing end-to-end | `POST /api/pairing` + webhook `/start` → mapping written               | Webhook auth + token consumption correctness       |
+| 3. Capture URL        | Webhook plain-message → `pending` link; unpaired handling              | Trust boundary: attribute link to mapped user only |
+| 4. Web UI             | Account-menu pairing (expiry/regenerate) + auto-refresh inbox          | Token-expiry UX; island state                      |
+| 5. Registration + E2E | `setWebhook` + secrets + manual E2E checklist                          | External setup; ≤2s latency; data isolation        |
 
 **Prerequisites:** F-01 (done); a registered Telegram bot (token + username); Cloudflare secrets set.
 **Estimated effort:** ~3–5 focused sessions across 5 phases; phase 2–3 (the webhook) carry most of the risk.
