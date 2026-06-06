@@ -1,9 +1,9 @@
 ---
 change_id: playwright-mcp-output-dir
 title: Pin Playwright MCP artifact output to gitignored dir (stop root-level screenshots)
-status: new
+status: implementing
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-06-06
 archived_at: null
 ---
 
@@ -27,17 +27,27 @@ Playwright MCP screenshots are landing in the repo root (e.g. `verify-signin.png
 **Gap:** the intended artifact location exists in `.gitignore` but nothing _enforces_
 it — neither MCP server config (no pinned output-dir) nor an agent convention.
 
-**Proposed fix (verify mechanism for plugin-provided MCP server during planning):**
+**Actual fix (after research confirmed `--output-dir` is the wrong lever):**
 
-- Pin the Playwright MCP server's `--output-dir` to an absolute, gitignored path
-  (`playwright-artifacts/`). `@playwright/mcp` supports `--output-dir <path>`. Determine
-  how to override args for a plugin MCP server (project `.mcp.json` vs plugin settings).
-- Add a convention to `CLAUDE.md` (Playwright section): agents always pass an **absolute
-  path** under `playwright-artifacts/` to `browser_take_screenshot`, never a bare filename.
-- (Optional safety net) broad `.gitignore` rule for stray root screenshots — band-aid;
-  the real fix is the pinned output-dir.
+- `--output-dir` governs only **auto-named** artifacts (`outputFile → outputDir`, default
+  `.playwright-mcp/`, already gitignored). It is **not** committable (lives in the
+  user-home plugin cache, overwritten on update) and has **no effect** on a bare
+  `filename` argument — the actual root-pollution case routes through `workspaceFile → cwd`
+  (repo root) and bypasses `--output-dir` entirely.
+- **Real, committable enforcement:**
+  1. **Agent convention in `CLAUDE.md`** — never pass a bare filename; use the
+     `playwright-artifacts/` prefix (relative or absolute) or omit `filename` entirely.
+  2. **`playwright-artifacts/*` + `!playwright-artifacts/.gitkeep` in `.gitignore`** —
+     ignores artifact contents while keeping the directory present on fresh clones (the
+     screenshot tool does not `mkdir`; ENOENT is the failure mode without the committed placeholder).
+  3. **Root-anchored safety net** (`/*.png`, `/*.jpg`, `/*.jpeg`) — belt-and-suspenders
+     for bare-filename slips; safe because there are no tracked root-level images in this project.
 
-**Acceptance:** a screenshot taken with a bare filename lands under `playwright-artifacts/`
+**Note on `--output-dir`:** it can be set as optional per-machine hardening in
+`~/.claude/plugins/cache/.../playwright/*/.mcp.json`, but it is user-local, non-portable,
+and irrelevant to the bare-filename case. Not a hard enforcement opt-in.
+
+**Acceptance:** a screenshot taken following the convention lands under `playwright-artifacts/`
 (gitignored), and `git status` stays clean after a Playwright session.
 
 **Context:** surfaced 2026-06-05 while wrapping up `bot-capture-to-inbox` (the leftover
