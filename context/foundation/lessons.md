@@ -172,3 +172,15 @@ List endpoints (`GET /api/links`) are exempt — an empty array is the correct, 
 **Rule**: For every `context: "server"` field in `env.schema`, always set `access: "secret"`. This forces runtime resolution from the Worker environment instead of build-time inlining, so guards evaluate correctly in production. `access: "public"` on a server field gives no meaningful benefit (the var is server-only regardless) and carries a silent dead-code risk.
 
 **Applies to**: plan, implement, impl-review — whenever adding or reviewing `env.schema` entries in `astro.config.mjs`.
+
+---
+
+## Migrations (or any schema/config) added during implementation must be written back into the plan
+
+**Context**: `supabase/migrations/` — a migration created mid-implementation that was not in the plan. Concretely in S-01: `20260603121000_fix_links_rls_init_plan.sql`, a Supabase "Auth RLS Initialization Plan" perf fix (rewrites `links` policies to `(select auth.uid())`), added during the build and never recorded in the plan's Migration Notes.
+
+**Problem**: The change was benign — semantics unchanged, and arguably load-bearing (the SELECT policy it touches gates Realtime delivery). But it doesn't appear in the plan, so the plan no longer fully describes the schema changes the change introduced. A later reviewer using the plan as ground truth flags it as unexplained scope, and the rollback steps in Migration Notes are now incomplete (they don't mention reverting it).
+
+**Rule**: When implementation discovers a needed migration / schema / config change that wasn't planned, append it to the plan's "Migration Notes" (and rollback steps) in the same phase that adds it — don't let the plan drift from the actual schema. A benign, correct change still has to be documented so the plan stays the source of truth.
+
+**Applies to**: every change with a `## Migration Notes` section; any phase that touches `supabase/migrations/`, `wrangler.jsonc`, or `astro.config.mjs` beyond what the plan listed.

@@ -10,7 +10,7 @@ export const prerender = false;
 interface TelegramUpdate {
   message?: {
     from?: { id: number };
-    chat: { id: number };
+    chat?: { id: number };
     text?: string;
   };
 }
@@ -35,10 +35,10 @@ export const POST: APIRoute = async (context) => {
   if (!message) return new Response(null, { status: 200 });
 
   const telegramId = message.from?.id;
-  const chatId = message.chat.id;
+  const chatId = message.chat?.id;
   const text = message.text ?? "";
 
-  if (!telegramId) return new Response(null, { status: 200 });
+  if (!telegramId || chatId === undefined) return new Response(null, { status: 200 });
 
   const startMatch = /^\/start(?:\s+(\S+))?/.exec(text);
   if (startMatch) {
@@ -54,13 +54,25 @@ export const POST: APIRoute = async (context) => {
       return new Response(null, { status: 200 });
     }
 
-    const { data: code } = await admin
+    // Atomic single-use consume: the conditional UPDATE burns the token and
+    // returns user_id only if it was unused and unexpired. Two concurrent
+    // /start calls can't both match (the second sees used_at already set),
+    // closing the select-then-update TOCTOU window.
+    const { data: code, error: codeError } = await admin
       .from("pairing_codes")
-      .select("user_id")
+      .update({ used_at: new Date().toISOString() })
       .eq("token", token)
       .is("used_at", null)
       .gt("expires_at", new Date().toISOString())
-      .single();
+      .select("user_id")
+      .maybeSingle();
+
+    if (codeError) {
+      // eslint-disable-next-line no-console -- server-side error logging for Workers observability
+      console.error("webhook pairing_codes consume failed:", codeError.message);
+      await sendMessage(chatId, "Server error — try again later.");
+      return new Response(null, { status: 200 });
+    }
 
     if (!code) {
       await sendMessage(chatId, "This link has expired or already been used. Generate a new one in the app.");
@@ -74,11 +86,11 @@ export const POST: APIRoute = async (context) => {
     if (upsertError) {
       // eslint-disable-next-line no-console -- server-side error logging for Workers observability
       console.error("webhook upsert telegram_links failed:", upsertError.message);
+      // Best-effort: re-open the consumed code so the user can retry pairing.
+      await admin.from("pairing_codes").update({ used_at: null }).eq("token", token);
       await sendMessage(chatId, "Server error — try again later.");
       return new Response(null, { status: 200 });
     }
-
-    await admin.from("pairing_codes").update({ used_at: new Date().toISOString() }).eq("token", token);
 
     await sendMessage(chatId, "Connected ✅ Send me any link to save it to your inbox.");
     return new Response(null, { status: 200 });
@@ -90,7 +102,18 @@ export const POST: APIRoute = async (context) => {
     return new Response(null, { status: 200 });
   }
 
-  const { data: link } = await admin.from("telegram_links").select("user_id").eq("telegram_id", telegramId).single();
+  const { data: link, error: linkError } = await admin
+    .from("telegram_links")
+    .select("user_id")
+    .eq("telegram_id", telegramId)
+    .maybeSingle();
+
+  if (linkError) {
+    // eslint-disable-next-line no-console -- server-side error logging for Workers observability
+    console.error("webhook telegram_links lookup failed:", linkError.message);
+    await sendMessage(chatId, "Server error — try again later.");
+    return new Response(null, { status: 200 });
+  }
 
   if (!link) {
     await sendMessage(chatId, "I don't know you yet — open the app, Connect Telegram, then come back.");

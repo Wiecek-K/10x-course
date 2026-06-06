@@ -342,7 +342,7 @@ The capture path is one mapping lookup + one insert + one `sendMessage` (+ a fir
 
 ## Migration Notes
 
-Two additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_links`); (2) adding `links` to the `supabase_realtime` publication (membership only — no schema or data change to `links`). Forward-only — no data backfill. Rollback = drop the two pairing tables (no other object depends on them) and `ALTER PUBLICATION supabase_realtime DROP TABLE public.links`.
+Three additive migrations: (1) the pairing tables (`pairing_codes`, `telegram_links`); (2) adding `links` to the `supabase_realtime` publication (membership only — no schema or data change to `links`); (3) `20260603121000_fix_links_rls_init_plan.sql` — added during implementation: rewrites the four `links` RLS policies to use `(select auth.uid())` instead of `auth.uid()` (Supabase "Auth RLS Initialization Plan" perf fix; policy semantics unchanged — evaluates the function once per query rather than per row, and aligns `links` with the form the pairing migration uses). Forward-only — no data backfill. Rollback = drop the two pairing tables (no other object depends on them), `ALTER PUBLICATION supabase_realtime DROP TABLE public.links`, and (if reverting the perf fix) recreate the `links` policies with the original `auth.uid()` form.
 
 ## References
 

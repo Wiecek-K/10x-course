@@ -9,6 +9,11 @@ interface Props {
   supabaseAnonKey: string;
 }
 
+// Defense-in-depth: only ever bind http(s) URLs to href, regardless of writer.
+function safeHref(url: string): string {
+  return url.startsWith("http://") || url.startsWith("https://") ? url : "#";
+}
+
 function formatRelativeTime(dateStr: string): string {
   const diffMs = Date.now() - new Date(dateStr).getTime();
   const secs = Math.floor(diffMs / 1000);
@@ -42,7 +47,7 @@ export default function InboxList({ initialLinks, userId, supabaseUrl, supabaseA
         >
           <div className="min-w-0 flex-1">
             <a
-              href={link.url}
+              href={safeHref(link.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="block truncate text-sm text-blue-300 hover:text-blue-100 hover:underline"
