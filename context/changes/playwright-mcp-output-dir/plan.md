@@ -225,15 +225,15 @@ The two leftover root PNGs from the original debug session were already cleaned 
 
 #### Automated
 
-- [x] 1.1 `.gitignore` ignores `playwright-artifacts/*` contents
-- [x] 1.2 Targeted root net present (`/*.png`, `/*.jpg`, `/*.jpeg`)
-- [x] 1.3 Safety net catches a stray root screenshot (`git check-ignore`)
-- [x] 1.4 `playwright-artifacts/.gitkeep` tracked & dir survives clone
-- [x] 1.5 `CLAUDE.md` mentions the `playwright-artifacts` convention
-- [x] 1.6 Format clean on changed docs
+- [x] 1.1 `.gitignore` ignores `playwright-artifacts/*` contents — c6cca64
+- [x] 1.2 Targeted root net present (`/*.png`, `/*.jpg`, `/*.jpeg`) — c6cca64
+- [x] 1.3 Safety net catches a stray root screenshot (`git check-ignore`) — c6cca64
+- [x] 1.4 `playwright-artifacts/.gitkeep` tracked & dir survives clone — c6cca64
+- [x] 1.5 `CLAUDE.md` mentions the `playwright-artifacts` convention — c6cca64
+- [x] 1.6 Format clean on changed docs — c6cca64
 
 #### Manual
 
-- [x] 1.7 Live Playwright screenshot lands under `playwright-artifacts/`
-- [x] 1.8 `git status` clean after the Playwright session
-- [x] 1.9 `CLAUDE.md` convention reads clearly to a fresh agent
+- [x] 1.7 Live Playwright screenshot lands under `playwright-artifacts/` — c6cca64
+- [x] 1.8 `git status` clean after the Playwright session — c6cca64
+- [x] 1.9 `CLAUDE.md` convention reads clearly to a fresh agent — c6cca64

@@ -1,7 +1,7 @@
 ---
 change_id: playwright-mcp-output-dir
 title: Pin Playwright MCP artifact output to gitignored dir (stop root-level screenshots)
-status: implementing
+status: implemented
 created: 2026-06-05
 updated: 2026-06-06
 archived_at: null
