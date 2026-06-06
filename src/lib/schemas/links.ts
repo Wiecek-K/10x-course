@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 export const CreateLinkSchema = z.object({
-  url: z.url(),
+  url: z.url().refine((u) => u.startsWith("http://") || u.startsWith("https://"), {
+    message: "URL must use the http(s) scheme",
+  }),
 });
 
 export const ListLinksQuerySchema = z.object({

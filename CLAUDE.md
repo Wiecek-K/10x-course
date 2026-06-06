@@ -49,8 +49,8 @@ All generated file content must be in **English** — UI strings, code comments,
 
   ```ts
   // ✅ do
-  export type ProcessingStatus = 'pending' | 'processing' | 'done' | 'failed';
-  export type Role = 'owner' | 'viewer';
+  export type ProcessingStatus = "pending" | "processing" | "done" | "failed";
+  export type Role = "owner" | "viewer";
 
   // ❌ don't
   processing_status: string;
@@ -59,7 +59,7 @@ All generated file content must be in **English** — UI strings, code comments,
 
   ```ts
   // ✅ do — narrow at the Supabase query boundary
-  const { data } = await supabase.from('links').select('*');
+  const { data } = await supabase.from("links").select("*");
   return json(data as Link[]);
 
   // ❌ don't — let the generated string type leak into domain code
@@ -73,11 +73,15 @@ All generated file content must be in **English** — UI strings, code comments,
 - Node.js v22.14.0 (see `.nvmrc`)
 - Copy `.env.example` → `.env` for Node-based tooling; copy to `.dev.vars` for Cloudflare local dev (`wrangler` reads `.dev.vars`, not `.env`)
 - Local Supabase stack: `bunx supabase start` (requires Docker; Studio at `http://localhost:54323`)
-- Deploy: `bunx wrangler deploy` (set `SUPABASE_URL` + `SUPABASE_KEY` as Cloudflare secrets)
+- Deploy: `bun run build && bunx wrangler deploy` (always build first — `wrangler deploy` alone deploys stale `dist/`; set `SUPABASE_URL` + `SUPABASE_KEY` as Cloudflare secrets)
 
 ## CI
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint + build on every push and PR to `master`. Requires `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
+
+## Playwright testing
+
+Always run Playwright browser automation via a **subagent** (`subagent_type: "general-purpose"`), never inline in the main context. The main context loses tool call history quickly when Playwright snapshots accumulate. The subagent receives a self-contained brief: URL, credentials, what to verify, and what to report back.
 
 <!-- BEGIN @przeprogramowani/10x-cli -->
 

@@ -70,7 +70,7 @@ const astroConfig = tseslint.config({
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
-  { ignores: ["src/db/database.types.ts", "worker-configuration.d.ts"] },
+  { ignores: ["src/db/database.types.ts", "worker-configuration.d.ts", ".claude/"] },
   baseConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],
