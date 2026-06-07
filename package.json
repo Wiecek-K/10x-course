@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "db:types": "supabase gen types typescript --local > src/db/database.types.ts"
   },
   "dependencies": {
@@ -63,7 +64,7 @@
     "*.{ts,tsx,astro}": [
       "eslint --fix"
     ],
-    "*.{json,css,md}": [
+    "*.{json,css}": [
       "prettier --write"
     ]
   }

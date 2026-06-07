@@ -9,9 +9,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `bun run preview` — preview production build
 - `bun run lint` — ESLint with type-checked rules
 - `bun run lint:fix` — auto-fix lint issues
-- `bun run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss)
+- `bun run format` — Prettier (includes prettier-plugin-astro + prettier-plugin-tailwindcss; `.md` excluded via `.prettierignore`). Non-default `printWidth: 120` (see `.prettierrc.json`).
+- `bun run format:check` — Prettier format check (CI gate; same exclusions apply)
 
-Pre-commit hooks (husky + lint-staged): runs `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css,md}`.
+Pre-commit hooks (husky + lint-staged): runs `eslint --fix` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css}`.
 
 No test runner is configured yet.
 
