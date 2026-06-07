@@ -1,7 +1,7 @@
 ---
 change_id: auto-description-pipeline
 title: Auto-description pipeline for saved links
-status: preparing
+status: planned
 created: 2026-06-07
 updated: 2026-06-07
 
