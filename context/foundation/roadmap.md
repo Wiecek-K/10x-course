@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-06-06
+updated: 2026-06-07
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -226,7 +226,6 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Preferencja obsługi duplikatów (rozwój S-01)** — opcja w ustawieniach: co się dzieje gdy user wyśle duplikat URL (dopasowanie UX do preferencji). Wymaga researchu jakie zachowania userzy faktycznie preferują. Post-MVP; MVP zapisuje duplikaty bez sprawdzania.
 - **Testy automatyczne dla S-01 (follow-up po S-02)** — S-01 weryfikowany ręcznie (E2E checklist), bo repo nie ma jeszcze test runnera. Po wylądowaniu S-02 (które i tak postawi runner) wrócić i dołożyć unity Vitest na newralgiczną logikę bota: parsowanie URL, walidacja `secret_token`, resolve `telegram_id → user_id`. Wrażliwe, bo to ścieżka service-role omijająca RLS.
 - **Cron sprzątający `pairing_codes` (rozwój S-01)** — S-01 nie usuwa wierszy z `pairing_codes`; tokeny tylko wygasają logicznie (`expires_at`) i webhook je odrzuca, ale wiersze zostają w tabeli i akumulują się (każde kliknięcie „Connect Telegram" zostawia trwały wiersz — użyty albo wygasły). Na MVP nieszkodliwe (wiersze małe, indeks po `token`, jeden użytkownik). Post-MVP: scheduled Cloudflare Cron Trigger (albo `pg_cron`) kasujący `WHERE expires_at < now() OR used_at IS NOT NULL`. Tracked: TAB-14 (Linear, low priority; related: TAB-7).
-- **Dev-tooling: katalog wyjściowy Playwright MCP** — zrzuty ekranu z Playwright MCP lądują w roocie repo (gołe nazwy plików + brak `--output-dir` na serwerze pluginu `playwright@claude-plugins-official`), mimo że `.gitignore` przewiduje `playwright-artifacts/` — ignorowany jest katalog, nie cwd. Naprawa: przypiąć `--output-dir` na `playwright-artifacts/` + konwencja w `CLAUDE.md` (agenci podają ścieżki bezwzględne pod `playwright-artifacts/`, nigdy gołych nazw). Operacyjne, poza zakresem feature roadmapy. Niska trudność, ale dług narasta i przeszkadza w bieżącym developmencie — podniesiony priorytet. Tracked: TAB-15 (Linear, medium priority); change: `context/changes/playwright-mcp-output-dir/`.
 
 ## Done
 
@@ -235,3 +234,4 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **F-01: (foundation) schemat domeny dla `links` (URL, nullable `micro_description`, `status` z domyślnym `inbox`, `last_visited`, `created_at`, `user_id`) z RLS per user_id; minimalne SSR API do create/read linka. Brak UI, brak kategorii, brak lifecycle event log — to ma sens dopiero w S-04/S-06.** — Archived 2026-05-31 → `context/archive/2026-05-29-domain-data-foundation/`. Lesson: —.
 - **F-02: (foundation) kolejka `tabzero-link-processing` podpięta w `wrangler.jsonc`; helper producer importowalny z API; minimalny consumer Worker który ack'uje jobs (jeszcze nic nie robi). Brak scrapingu, brak LLM calls — to wszystko jest w S-02.** — Archived 2026-06-01 → `context/archive/2026-05-29-link-processing-queue/`. Lesson: —.
 - **S-01: użytkownik wysyła URL do bota w komunikatorze; bot odpowiada potwierdzeniem w ≤2s; link pojawia się w inboxie web app (jako URL, opis przyjdzie z S-02).** — Archived 2026-06-06 → `context/archive/2026-06-03-bot-capture-to-inbox/`. Lesson: —.
+- **Dev-tooling: katalog wyjściowy Playwright MCP (TAB-15)** — Archived 2026-06-07 → `context/archive/2026-06-05-playwright-mcp-output-dir/`. Lesson: —.

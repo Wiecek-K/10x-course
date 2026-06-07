@@ -48,9 +48,15 @@ supabase/snippets/
 
 # Playwright MCP session artifacts (snapshots, console logs)
 .playwright-mcp/
-# Playwright screenshots and test artifacts (agents save here, never in project root)
-playwright-artifacts/
+# Playwright artifacts (agents write here; never the repo root)
+playwright-artifacts/*
+!playwright-artifacts/.gitkeep
+# E2E test results
 test-results/
+# Safety net: stray root-level screenshots from a bare-filename slip
+/*.png
+/*.jpg
+/*.jpeg
 
 # E2E test credentials (copy from .env.test.example)
 .env.test

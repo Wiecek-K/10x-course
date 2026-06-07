@@ -79,9 +79,18 @@ All generated file content must be in **English** — UI strings, code comments,
 
 GitHub Actions (`.github/workflows/ci.yml`) runs lint + build on every push and PR to `master`. Requires `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
 
-## Playwright testing
+## Playwright
 
 Always run Playwright browser automation via a **subagent** (`subagent_type: "general-purpose"`), never inline in the main context. The main context loses tool call history quickly when Playwright snapshots accumulate. The subagent receives a self-contained brief: URL, credentials, what to verify, and what to report back.
+
+When calling `browser_take_screenshot` (or any Playwright MCP tool that writes a file), **never pass a bare filename**. The plugin MCP server's cwd is the repo root, so a bare name (e.g. `screenshot.png`) lands there and pollutes `git status`.
+
+Two safe patterns:
+
+- **Prefixed path** — include the `playwright-artifacts/` prefix (relative or absolute): `playwright-artifacts/my-screenshot.png`. The directory always exists thanks to a committed `.gitkeep`; its contents are gitignored.
+- **Omit `filename`** — the tool auto-saves into `.playwright-mcp/` (already gitignored).
+
+A root-anchored `.gitignore` safety net (`/*.png`, `/*.jpg`, `/*.jpeg`) is belt-and-suspenders for bare-filename slips, but the convention above is the primary fix.
 
 <!-- BEGIN @przeprogramowani/10x-cli -->
 
