@@ -25,7 +25,7 @@ Verify: send an article URL, a YouTube URL, and a known-paywalled URL through th
 
 - `astro:env/server` resolves in `queue()` context — adapter patches the env getter at module load (`research.md` Gap 1). No refactor of `supabase-admin.ts` or new `llm-key.ts` needed.
 - Jina returns **only title + nav chrome** for YouTube (live test: 41k chars, no transcript) — YouTube MUST branch before the cascade.
-- Queue `max_retries: 3` already absorbs transient failures before status reaches `failed` — manual retry is unnecessary at MVP.
+- Queue `max_retries: 3` absorbs transient failures before status reaches `failed` — **but only if services surface transients as thrown exceptions, not `null`**. The error taxonomy is deliberate: a service returns `null` for a *definitive* no-content result (HTTP 404, empty body, no captions) and **throws** on a *transient* fault (HTTP 429/5xx, network error). The consumer maps `null` → terminal `failed` + `ack()`, and a thrown error → `msg.retry()` so `max_retries` actually fires. A null-on-everything design would make this absorption claim false (a transient 429 would terminal-fail on first hit), so the throw-vs-null split is load-bearing, not cosmetic. With it in place, manual retry is unnecessary at MVP.
 - Realtime delivers service-role UPDATEs to the owning user via the subscriber's SELECT RLS policy (`lessons.md`) — no special trick beyond adding an UPDATE handler.
 
 ## What We're NOT Doing
@@ -73,6 +73,8 @@ Add the LLM key to the env schema and runtime config, create the key-access help
 
 **Contract**: Add a real `LLM_API_KEY=<value>` line to `.dev.vars` (never `###` placeholder — wrangler treats `#` as a comment) and a documented placeholder entry to `.env.example`. Production key set via `wrangler secret put LLM_API_KEY`.
 
+> ⚠️ **Worktree gotcha**: `.dev.vars` is gitignored, so a **git worktree does not inherit it** — it lives only in the main checkout (`/mnt/global/Projects/10x-course/.dev.vars`). When developing this change in a worktree (e.g. `.claude/worktrees/s-02`), first **copy `.dev.vars` from the main checkout into the worktree root**, then add the new keys there — otherwise `wrangler dev` (cwd = worktree root) reads no `.dev.vars` and every secret resolves `undefined`. The current `.dev.vars` does **not** yet contain `LLM_API_KEY` or `RAPIDAPI_KEY` — both are added in this change (Phase 1 + Phase 2).
+
 #### 3. Key-access helper
 
 **File**: `src/lib/llm-key.ts` (new)
@@ -119,7 +121,7 @@ Leaf scraping functions plus an orchestrator that selects the YouTube branch or 
 
 **Intent**: Primary page scraper — fetch clean Markdown for a URL.
 
-**Contract**: `scrapeJina(url: string): Promise<string | null>` — `GET https://r.jina.ai/<url>`; on non-2xx or empty body return `null`, else the Markdown text. No API key required at MVP volume.
+**Contract**: `scrapeJina(url: string): Promise<string | null>` — `GET https://r.jina.ai/<url>`. **Error taxonomy** (shared by all scrape/describe services, see Key Discoveries): return `null` on a *definitive* miss (HTTP 404 or empty body — nothing to retry); **throw** on a *transient* fault (HTTP 429/5xx or a network/`fetch` rejection) so the consumer's `msg.retry()` path engages. Return the Markdown text on success. No API key required at MVP volume.
 
 #### 2. Wayback tier
 
@@ -127,7 +129,7 @@ Leaf scraping functions plus an orchestrator that selects the YouTube branch or 
 
 **Intent**: Free fallback for pages Jina can't reach — fetch an archived snapshot's content via Jina.
 
-**Contract**: `scrapeWayback(url: string): Promise<string | null>` — query `https://archive.org/wayback/available?url=<url>`; if a closest snapshot exists, run it back through Jina (`r.jina.ai/<snapshot-url>` with `X-Remove-Selector: #wm-ipp-base` header) and return Markdown; else `null`.
+**Contract**: `scrapeWayback(url: string): Promise<string | null>` — query `https://archive.org/wayback/available?url=<url>`; if a closest snapshot exists, run it back through Jina (`r.jina.ai/<snapshot-url>` with `X-Remove-Selector: #wm-ipp-base` header) and return Markdown; `null` when no snapshot exists. Same error taxonomy as `scrapeJina`: throw on transient archive.org/Jina 429/5xx or network error; `null` only for the definitive "no snapshot" case.
 
 #### 3. Paid proxy stub
 
@@ -143,7 +145,14 @@ Leaf scraping functions plus an orchestrator that selects the YouTube branch or 
 
 **Intent**: Detect YouTube URLs and fetch their transcript from the RapidAPI micro-API.
 
-**Contract**: Two exports — `isYouTubeUrl(url: string): boolean` (matches `youtube.com/watch` and `youtu.be/`) and `scrapeYouTubeTranscript(url: string): Promise<string | null>` (GET the RapidAPI transcript endpoint with `X-RapidAPI-Key` header; join the returned `{ text }[]` segments into one string; `null` on failure or no captions). Reads the RapidAPI key from `astro:env/server` — add `RAPIDAPI_KEY` to the env schema and `.dev.vars` in this phase (same `access: "secret"` form as Phase 1).
+> 🚧 **BLOCKER (owner action required)** — the concrete RapidAPI transcript listing is not yet chosen, so the request shape (host, path, auth headers, response JSON) is undefined. The owner will personally research and select a listing, then return with its documentation. Required deliverable spec: **`rapidapi-youtube-research.md`** (sibling of this plan). Until that doc lands, `scrapeYouTubeTranscript` ships as a **stub returning `null`** so the rest of the pipeline (Phases 2–5) proceeds unblocked; YouTube links terminal-`failed` temporarily. `isYouTubeUrl` is **not** blocked — implement it now.
+
+**Contract** (split by blocker status):
+
+- `isYouTubeUrl(url: string): boolean` — matches `youtube.com/watch` and `youtu.be/`. **Unblocked, implement now.**
+- `scrapeYouTubeTranscript(url: string): Promise<string | null>` — **BLOCKED on `rapidapi-youtube-research.md`.** Interim: stub returning `null`. Final (after research): GET the chosen RapidAPI transcript endpoint with **both** `X-RapidAPI-Key` **and** `X-RapidAPI-Host` headers (the gateway 403s without Host); join the returned segment array into one string per the doc's confirmed response shape. Error taxonomy: `null` when no captions / empty transcript (definitive); **throw** on RapidAPI 429/5xx or network error (transient → retry).
+
+Env wiring (unblocked): add `RAPIDAPI_KEY` to the `astro.config.mjs` env schema and `.dev.vars` in this phase (same `access: "secret"` form as Phase 1). Reads the RapidAPI key from `astro:env/server` — add `RAPIDAPI_KEY` to the env schema and `.dev.vars` in this phase (same `access: "secret"` form as Phase 1).
 
 #### 5. Scrape orchestrator
 
@@ -182,7 +191,7 @@ Turn scraped content into a 1-2 sentence micro-description via gpt-4o-mini using
 
 **Intent**: Generate the micro-description, matching a consistent house style via few-shot examples (the talk's proven quality lever, adapted to hardcoded examples since no per-user corpus exists yet).
 
-**Contract**: `describeContent(content: string, userId: string): Promise<string | null>`. Resolves the key via `getLlmApiKey(userId)` (returns `null` if no key). POSTs to `https://api.openai.com/v1/chat/completions` with `model: "gpt-4o-mini"`, `max_tokens: ~120`. The system/user messages embed 2-3 hardcoded example micro-descriptions as the style template, then the scraped content (truncated to a sane token budget). Returns the trimmed completion text, or `null` on API error.
+**Contract**: `describeContent(content: string, userId: string): Promise<string | null>`. Resolves the key via `getLlmApiKey(userId)` (returns `null` if no key). POSTs to `https://api.openai.com/v1/chat/completions` with `model: "gpt-4o-mini"`, `max_tokens: ~120`. The system/user messages embed 2-3 hardcoded example micro-descriptions as the style template, then the scraped content. **Input cap (MVP, locked):** truncate scraped content to **~6,000 characters (~1,500 tokens)** before the call — bounds per-link cost and the ~11s latency claim; revisit under the parked roadmap task below. **Few-shot examples (MVP):** ship 2-3 `TODO`-marked placeholder micro-descriptions written in-plan/in-code before Phase 3 starts — placeholder house style for MVP, deliberately not researched yet. Returns the trimmed completion text. **Error taxonomy** (same split as the scrape services): return `null` only for definitive non-retryable cases (no key from `getLlmApiKey`, or an empty/blank completion); **throw** on a transient OpenAI fault (HTTP 429/5xx, network error) so the consumer retries. Do not collapse a transient 429 into `null` — that would permanently fail a link whose content scraped fine.
 
 The few-shot framing is the non-obvious part — shape it like:
 
@@ -209,6 +218,8 @@ User: Summarize the following content in that same style:
 
 **Implementation Note**: Pause for manual confirmation before Phase 4.
 
+**Post-implementation note (required)**: After this phase lands, append a short findings note to the parked roadmap task **"Micro-description prompt-quality research"** — capture first-pass conclusions: did the ~6k-char cap feel right (truncating useful content? too generous on cost?), did the placeholder few-shot examples produce a consistent style, and what to test in the dedicated research/experiment pass. This closes the loop between the MVP guess and the future tuning task.
+
 ---
 
 ## Phase 4: Queue Consumer
@@ -225,7 +236,7 @@ Wire the consumer to orchestrate scrape → describe → write, with status tran
 
 **Intent**: Replace the log+ack stub with the real pipeline for one message per invocation.
 
-**Contract**: `queue(batch)` takes `const [msg] = batch.messages` (batch size is 1). Build `createAdminClient()`; if `null`, `msg.retry()` and return. Then: update the link to `processing_status: 'processing'`; `content = await scrapeContent(url)`; if content, `desc = await describeContent(content, msg.body.userId)`; on success update `{ micro_description: desc, processing_status: 'done' }`; on scrape/LLM failure update `{ processing_status: 'failed' }`. `msg.ack()` on a completed terminal write; `msg.retry()` only on infrastructure errors (admin client null, thrown exception) so the queue's `max_retries` applies. The link's `url` is fetched via the admin client by `msg.body.linkId` (the message carries no URL). Cast Supabase reads to the `Link` type at the query boundary.
+**Contract**: `queue(batch)` takes `const [msg] = batch.messages` (batch size is 1). Build `createAdminClient()`; if `null`, `msg.retry()` and return. Then: update the link to `processing_status: 'processing'`; `content = await scrapeContent(url)`; if content, `desc = await describeContent(content, msg.body.userId)`; on success update `{ micro_description: desc, processing_status: 'done' }`. **Terminal vs retryable** (the F1 taxonomy): a `null` returned by `scrapeContent` or `describeContent` is a *definitive* miss → update `{ processing_status: 'failed' }` then `msg.ack()`. A *thrown* error from any service (transient 429/5xx/network) propagates out of the `try` → do **not** write `failed`, instead `msg.retry()` so the queue's `max_retries: 3` re-attempts; leave status at `processing` between attempts. Admin client `null` is also `msg.retry()` (infra). Wrap the pipeline so thrown errors reach `msg.retry()` rather than crashing the batch. The link's `url` is fetched via the admin client by `msg.body.linkId` (the message carries no URL). Cast Supabase reads to the `Link` type at the query boundary.
 
 #### 2. Admin client comment
 
