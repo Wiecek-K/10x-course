@@ -1,9 +1,9 @@
 ---
 change_id: auto-description-pipeline
 title: Auto-description pipeline for saved links
-status: planned
+status: implementing
 created: 2026-06-07
-updated: 2026-06-07
+updated: 2026-06-08
 
 archived_at: null
 ---
@@ -41,16 +41,17 @@ archived_at: null
 
 #### Gap 3: HTML stripping without Node.js (Wayback Machine fallback) — RESOLVED, NOT NEEDED
 
-**Decision: delegate Wayback HTML to Jina Reader. No in-Worker HTML parsing at any tier.**
+**Decision: every scraping tier returns Markdown/text natively. No in-Worker HTML parsing at any tier.**
 
-All three scraping tiers produce Markdown/text natively:
-- Tier 1: `https://r.jina.ai/<original-url>` → Markdown (Jina Readability)
-- Tier 2: `https://r.jina.ai/<wayback-snapshot-url>` + `X-Remove-Selector: #wm-ipp-base` header → Markdown
-- Tier 3: ScrapingBee `?return_page_markdown=true` → Markdown directly
-- YouTube: RapidAPI transcript → text array
+**MVP scope (2026-06-08): single tier — Firecrawl only.** A Firecrawl miss marks the page unsupported (`failed`); no fallback. The full multi-tier flow is deferred post-MVP (roadmap §Parked) so dogfooding reveals what Firecrawl actually misses before fallback code is written.
 
-**Why Tier 2 works:** Wayback snapshot URL passed to Jina — Jina fetches the static archive HTML, runs Readability, and returns clean content. The Wayback toolbar (`div#wm-ipp-base`) is low-density nav content excluded by Readability. `X-Remove-Selector: #wm-ipp-base` header provides deterministic removal before Readability runs. Wayback is static HTML (no JS, no paywall, no bot detection) — Jina performs *better* on it than on the original dynamic page.
+- **MVP — Tier 1:** Firecrawl `POST /v2/scrape` `{ formats: ["markdown"] }` → Markdown at `data.data.markdown`
+- **Deferred — Tier 2 (Wayback):** `https://r.jina.ai/<wayback-snapshot-url>` + `X-Remove-Selector: #wm-ipp-base` header → Markdown (keyless Jina sub-call, no Firecrawl credit)
+- **Deferred — Tier 3:** paid proxy (vendor TBD post-dogfooding)
+- **YouTube:** detected via `isYouTubeUrl()`, short-circuited to placeholder — transcript tier deferred post-MVP (roadmap §Parked)
 
-**HTMLRewriter and regex rejected for MVP:** zero in-Worker parsing code needed. HTMLRewriter noted as available CF-native API for future use if a raw-HTML tier is ever added.
+**Why the deferred Wayback tier works (kept for the future build):** Wayback snapshot URL passed to Jina — Jina fetches the static archive HTML, runs Readability, and returns clean content. The Wayback toolbar (`div#wm-ipp-base`) is low-density nav content excluded by Readability. `X-Remove-Selector: #wm-ipp-base` header provides deterministic removal before Readability runs. Wayback is static HTML (no JS, no paywall, no bot detection) — Jina performs *better* on it than on the original dynamic page.
+
+**HTMLRewriter and regex rejected:** zero in-Worker parsing code needed. HTMLRewriter noted as available CF-native API for future use if a raw-HTML tier is ever added.
 
 **Implementation rule:** every scraping tier must return a string (Markdown or plain text) to the caller. The consumer never parses HTML.

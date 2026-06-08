@@ -7,9 +7,9 @@ repository: 10x-course
 topic: "S-02 auto-description-pipeline — codebase state, scraping vendors, LLM feasibility"
 tags: [research, s-02, queue, scraping, llm, realtime, inbox]
 status: complete
-last_updated: 2026-06-07
+last_updated: 2026-06-08
 last_updated_by: claude-sonnet-4-6
-last_updated_note: "Added follow-up research: Gap 3 — HTML stripping for Wayback fallback (resolved: not needed)"
+last_updated_note: "Added follow-up research: Crawl4AI — cloud API status, self-hosted REST API, CF Worker compatibility (2026-06-08T00:44)"
 ---
 
 # Research: S-02 auto-description-pipeline
@@ -531,4 +531,391 @@ Every scraping tier function signature:
 ```typescript
 async function scrapeXxx(url: string): Promise<string | null>
 ```
+
+---
+
+## Follow-up Research 2026-06-07T20:53+02:00
+
+### RapidAPI YouTube Transcript Provider Comparison
+
+**Research question**: Which RapidAPI YouTube transcript provider to use? Rank by community ratings + documentation clarity.
+
+**Critical limitation discovered**: RapidAPI marketplace renders ratings, subscriber counts, and pricing tables client-side via GraphQL. These values are **not publicly indexed** and **not accessible via WebFetch**. Any ranking by community rating requires a logged-in RapidAPI session with manual inspection.
+
+Proxy signals used instead: documentation quality (confirmed external sources) + citation frequency in developer automation communities (n8n, Make.com, Latenode templates).
+
+---
+
+### Provider Comparison Table
+
+| Rank | Listing | Provider slug | Host header | Doc score | Community citations | Free tier |
+|------|---------|---------------|-------------|-----------|---------------------|-----------|
+| 1 | **YouTube Transcripts** | `8v2FWW4H6AmKw89` | `youtube-transcripts.p.rapidapi.com` | **4/5** | Medium | 100 req/mo |
+| 2 | **Youtube Transcript** (solid-api) | `solid-api-solid-api-default` | `youtube-transcript3.p.rapidapi.com` | **3.5/5** | Low-medium | 100 req/mo |
+| 3 | **YouTube Transcript** (thisisgazzar) | `thisisgazzar` | `youtube-transcript1.p.rapidapi.com` | **2.5/5** | **High** (most n8n/Make templates) | ~100 req/mo |
+| 4 | **YouTube Transcript API** (mahmudulhasandev) | `mahmudulhasandev` | not confirmed | **2/5** | Low | unknown |
+
+**Key tension**: thisisgazzar has the most automation community citations but weakest documented schema. Supadata (`8v2FWW4H6AmKw89`) has the best schema docs but fewer templates.
+
+---
+
+### Supadata — Confirmed Implementation Contract
+
+This provider is the Supadata platform listed on RapidAPI. All parameters below confirmed from external sources (official Supadata docs, DeepWiki, community write-ups).
+
+**Request:**
+- Method: `GET`
+- Host: `youtube-transcripts.p.rapidapi.com`
+- Path: `/transcript`
+- Params:
+  - `?videoId=<11-char-id>` OR `?url=<full-youtube-url>` — both accepted
+  - `?lang=en` — optional language filter
+  - `?text=true` — returns flat string instead of segments
+
+**Response (200, segments mode):**
+```json
+{
+  "lang": "en",
+  "availableLangs": ["en", "es"],
+  "content": [
+    { "text": "Hello world", "offset": 18800, "duration": 1000, "lang": "en" }
+  ]
+}
+```
+Transcript path: `response.content[]` — fields: `text`, `offset`, `duration`, `lang`.
+
+**Async path (long videos):** HTTP 202 + `jobId` in body → poll `GET /transcript/{jobId}`.
+
+**Error mapping for the plan's throw-vs-null taxonomy:**
+- No captions / unavailable video → HTTP 404 (maps to `null` — no retry)
+- Rate limit → HTTP 429 — RapidAPI platform envelope: `{"message": "You have exceeded the rate limit..."}` (maps to `throw`)
+- Server error → HTTP 5xx (maps to `throw`)
+
+**Exact 404 JSON field names NOT confirmed** from external sources — requires live test call.
+
+**TypeScript SDK available**: `npm install supadata` (may bypass RapidAPI proxy entirely).
+
+---
+
+### solid-api — Confirmed Implementation Contract
+
+**Request:**
+- Path: `GET /transcript`
+- Param: `?videoId=<bare-11-char-id>` — full URL acceptance NOT confirmed
+- 7 endpoints: `/transcript`, `/transcript/text`, `/transcript/srt`, `/transcript/vtt`, `/languages`, `/video-info`, `/batch`
+
+**Response (200):**
+```json
+{
+  "segments": [
+    { "start": 0.0, "text": "Good morning." }
+  ],
+  "title": "...",
+  "duration": "19:24"
+}
+```
+Transcript path: `response.segments[]` — fields: `start`, `text`. Note: `duration` field missing per segment (only video-level duration in root).
+
+**Error mapping:** HTTP 404 for no captions (exact JSON body not confirmed).
+
+---
+
+### Gaps requiring live verification (all providers)
+
+1. **Actual RapidAPI ratings + subscriber counts** — must open each listing while logged in
+2. **404 error JSON body** — exact field names (e.g., `error`, `message`, `code`) not confirmed from external sources for any provider
+3. **Supadata RapidAPI listing is live** — listing exists as a proxy to `api.supadata.ai`; direct API (`api.supadata.ai`) may be simpler than going through RapidAPI
+4. **solid-api full-URL acceptance** — only `videoId=` param confirmed; URL form uncertain
+
+---
+
+### Recommendation
+
+**Supadata (`youtube-transcripts`)** for MVP implementation:
+- Only provider with fully confirmed response shape (`content[]{text,offset,duration,lang}`)
+- Accepts both bare ID and full URL — no need to extract ID in `youtube.ts`
+- Has official TypeScript SDK (potential fallback if RapidAPI listing has issues)
+- 100 free req/mo matches free tiers of all other candidates
+- Async path documented (202 + jobId) — important for long videos
+
+**Manual step still required**: log into RapidAPI → check `youtube-transcripts` listing for actual star rating + review count before committing to provider. Also run one live test call to capture exact 404 error body shape.
+
+---
+
+## Follow-up Research 2026-06-08T00:44 — Crawl4AI: Cloud API, Self-Hosted REST API, CF Worker Compatibility
+
+### Research Question
+
+Is Crawl4AI usable from a Cloudflare Worker via a simple `fetch()` call? Does it have a hosted cloud API? What does its self-hosted REST API look like?
+
+---
+
+### 1. Cloud/Hosted API — Status and Pricing
+
+**Status: Closed beta, not publicly available as of 2026-06-08.**
+
+- The official site (`crawl4ai.com` → redirects to `docs.crawl4ai.com`) displays: *"Crawl4AI Cloud API — Closed Beta (Launching Soon)"*
+- Early access application form: `https://forms.gle/E9MyPaNXACnAMaqG7`
+- No public URL, no published pricing
+- A cloud SDK repo exists: `github.com/unclecode/crawl4ai-cloud-sdk` — installable as `pip install crawl4ai-cloud-sdk` (Python), `npm install crawl4ai-cloud` (Node), or `go get github.com/unclecode/crawl4ai-cloud-sdk/go`
+- SDK uses `api.crawl4ai.com` as base URL (extracted from SDK README)
+- API docs visible at `api.crawl4ai.com/docs` but return no content (empty page — closed beta gating)
+- API keys follow format `sk_live_...` based on SDK usage examples
+- **No pricing tiers, no rate limits, no public endpoints documented anywhere**
+
+**Bottom line for Cloudflare Workers: the cloud API does not exist publicly yet. You cannot call it.**
+
+---
+
+### 2. Self-Hosted REST API — Full Reference
+
+The open-source library ships a FastAPI server deployable via Docker. This **is** an HTTP REST API callable via `fetch()` from any HTTP client — including a Cloudflare Worker, provided you self-host the server.
+
+#### Docker deployment
+
+```bash
+# Pull image
+docker pull unclecode/crawl4ai:latest
+
+# Run (no LLM features)
+docker run -d \
+  -p 11235:11235 \
+  --name crawl4ai \
+  --shm-size=1g \
+  unclecode/crawl4ai:latest
+
+# Run (with LLM extraction — pass API keys via env file)
+docker run -d \
+  -p 11235:11235 \
+  --name crawl4ai \
+  --env-file .llm.env \
+  --shm-size=1g \
+  unclecode/crawl4ai:latest
+```
+
+Docker image: `unclecode/crawl4ai:latest` (also versioned: `unclecode/crawl4ai:0.8.0`, `unclecode/crawl4ai:0.7.7`)
+
+Default port: **11235**
+
+`.llm.env` env vars for LLM extraction (optional):
+```
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=...
+DEEPSEEK_API_KEY=...
+GROQ_API_KEY=...
+LLM_PROVIDER=openai/gpt-4o-mini
+LLM_TEMPERATURE=0.7
+```
+
+#### Complete endpoint list (v0.8.x)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/crawl` | Synchronous crawl — blocks until done |
+| POST | `/crawl/stream` | Streaming crawl results (SSE) |
+| POST | `/crawl/job` | Async job submission |
+| GET | `/job/{task_id}` | Poll async job status |
+| POST | `/md` | Markdown generation with filtering |
+| POST | `/html` | Preprocessed HTML extraction |
+| POST | `/screenshot` | Capture PNG screenshot |
+| POST | `/pdf` | Generate PDF |
+| POST | `/execute_js` | Run JavaScript on page |
+| POST | `/llm` | LLM-based structured extraction |
+| POST | `/llm/job` | Async LLM extraction |
+| POST | `/token` | Get JWT token (if auth enabled) |
+| GET | `/monitor/health` | Container metrics + pool stats |
+| GET | `/monitor/requests` | Active/completed request tracking |
+| GET | `/monitor/browsers` | Browser pool details |
+| GET | `/monitor/endpoints/stats` | Per-endpoint performance analytics |
+| GET | `/monitor/timeline?minutes=5` | Time-series chart data |
+| GET | `/monitor/logs/janitor?limit=10` | Cleanup logs |
+| GET | `/monitor/logs/errors?limit=10` | Error logs |
+| POST | `/monitor/actions/cleanup` | Force cleanup |
+| POST | `/monitor/actions/kill_browser` | Kill specific browser |
+| POST | `/monitor/actions/restart_browser` | Restart browser |
+| POST | `/monitor/stats/reset` | Reset accumulated stats |
+| WS | `/monitor/ws` | WebSocket monitoring (2s intervals) |
+| GET | `/mcp/sse` | MCP Server-Sent Events |
+| WS | `/mcp/ws` | MCP WebSocket |
+| GET | `/mcp/schema` | MCP tool schemas |
+| GET | `/playground` | Interactive web UI for testing |
+| GET | `/hooks/info` | Available hook points |
+
+#### POST /crawl — request body
+
+```json
+{
+  "urls": ["https://example.com"],
+  "browser_config": {
+    "type": "BrowserConfig",
+    "params": { "headless": true }
+  },
+  "crawler_config": {
+    "type": "CrawlerRunConfig",
+    "params": {
+      "cache_mode": "bypass",
+      "stream": false
+    }
+  }
+}
+```
+
+Minimal request (only `urls` is required):
+```json
+{ "urls": ["https://example.com"] }
+```
+
+```bash
+curl -X POST http://localhost:11235/crawl \
+  -H "Content-Type: application/json" \
+  -d '{"urls": ["https://example.com"]}'
+```
+
+#### POST /crawl — response body
+
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "url": "https://example.com",
+      "success": true,
+      "html": "<html>...</html>",
+      "markdown": "# Title\n\nContent...",
+      "extracted_content": {},
+      "links": {},
+      "media": {},
+      "status_code": 200,
+      "error_message": null
+    }
+  ],
+  "hooks": {
+    "status": {
+      "status": "success",
+      "attached_hooks": [],
+      "successfully_attached": 0
+    },
+    "execution_log": [],
+    "errors": [],
+    "summary": {}
+  }
+}
+```
+
+**Markdown is in `results[0].markdown`** — a plain string, not a nested object. This is for the self-hosted REST API. The cloud SDK uses `result.markdown.raw_markdown` (nested object) — different shape.
+
+#### Authentication on self-hosted
+
+**Off by default.** JWT authentication is optional, configured via `config.yml` (`jwt_enabled: true`). When enabled, clients must first call `POST /token` with email + API token to get a JWT, then pass it as `Authorization: Bearer <token>`.
+
+For internal/private deployments (typical usage), auth is disabled — no headers needed.
+
+#### Concurrency limits
+
+Server uses a global semaphore (`GLOBAL_SEM`) capping concurrent pages. Default `max_pages: 40`. No per-client rate limiting documented.
+
+---
+
+### 3. Python Library — Basic Usage (for reference)
+
+```python
+import asyncio
+from crawl4ai import AsyncWebCrawler
+
+async def main():
+    async with AsyncWebCrawler() as crawler:
+        result = await crawler.arun(url="https://example.com")
+        print(result.markdown)  # plain Markdown string
+
+asyncio.run(main())
+```
+
+`result.markdown` is a string directly. No `.raw_markdown` nesting in the Python library — the nested shape is only in the cloud SDK.
+
+---
+
+### 4. Response Format
+
+- **Self-hosted REST API**: JSON envelope. Markdown lives at `results[0].markdown` (string). Also returns raw `html`, `links`, `media`, `status_code`, `extracted_content`.
+- **Python library**: `result.markdown` directly on the result object (string).
+- **Cloud SDK** (when available): `result.markdown.raw_markdown` (nested object — different from library).
+- Does **not** return plain Markdown as the raw HTTP body (unlike Jina Reader's `r.jina.ai/<url>` which returns raw Markdown text). Always JSON.
+
+---
+
+### 5. Performance Benchmarks vs Competitors
+
+From `spider.cloud/blog/best-web-scraping-apis-for-ai-2026/` (Feb 2026, 1,000 URL test):
+
+| Tool | Average response time |
+|------|----------------------|
+| Spider | < 1 second |
+| Jina Reader | ~2 seconds |
+| Firecrawl | ~3 seconds |
+| ScrapingBee | ~3.1 seconds |
+| Apify | ~4 seconds |
+| **Crawl4AI** | **~5 seconds** |
+| Bright Data | ~5 seconds |
+
+Spider throughput: 182 pages/s (static HTML), 48 pages/s (JS-heavy SPAs).
+
+Crawl4AI is the **slowest** in this benchmark. However it is the only self-hosted open-source option — all others are managed SaaS. Its 5s average reflects Playwright browser startup overhead per page in their test methodology.
+
+Estimated self-hosted TCO at 100K pages/month: ~$385–585/month (compute + proxies + engineering time) per spider.cloud analysis.
+
+---
+
+### 6. Maintenance / GitHub Stats
+
+- **Repo**: `github.com/unclecode/crawl4ai`
+- **Stars**: ~68,000 (as of June 2026)
+- **Commits**: 1,533 on main branch
+- **Latest release**: v0.8.9 on 2026-06-04
+- **Maintainer**: individual, `@unclecode` (not a company)
+- **License**: Apache 2.0
+- **Activity**: very active — released v0.8.9 four days ago; cloud SDK repo created recently
+
+---
+
+### 7. Cloudflare Worker Compatibility — Definitive Answer
+
+**Crawl4AI cannot be used directly from a Cloudflare Worker in any form that is currently publicly available.**
+
+| Path | Status | Usable from CF Worker? |
+|------|--------|------------------------|
+| Python library | Requires Python + Playwright runtime | No |
+| Self-hosted Docker REST API | HTTP API on port 11235 — callable via `fetch()` | Yes, if you deploy and expose it |
+| Cloud API (`api.crawl4ai.com`) | Closed beta, no public access | No — does not exist yet |
+
+**If you self-host the Docker container** (e.g. on a VPS, Fly.io, Railway, or Cloud Run) and expose port 11235 publicly, a Cloudflare Worker can call it with a plain `fetch()`:
+
+```typescript
+// From a Cloudflare Worker — works if server is publicly accessible
+const res = await fetch("https://your-crawl4ai-server.example.com/crawl", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ urls: [targetUrl] }),
+});
+const data = await res.json();
+const markdown = data.results[0].markdown;
+```
+
+**For zero-infrastructure HTTP-to-Markdown (no self-hosting), Jina Reader remains the correct choice**: `https://r.jina.ai/<url>` returns raw Markdown text from a simple GET with no request body, no setup, no server to manage.
+
+---
+
+### 8. Summary Verdict for S-02
+
+Crawl4AI is not a viable Jina Reader replacement for this project's CF Worker context:
+
+- Cloud API: does not exist publicly (closed beta, no ETA, no pricing)
+- Self-hosted: requires running a Python/Playwright Docker container — adds infra cost and ops overhead not warranted for MVP
+- Python library: not callable from a Worker at all
+- Even when the cloud API launches, it will require API key auth and return JSON (not raw Markdown), so it would be a more complex integration than `r.jina.ai/<url>`
+
+**Decision: Crawl4AI is not a replacement for Jina Reader in this architecture. Continue with the Jina Reader → ScrapingBee → Wayback scraping tier as planned.**
+
+Crawl4AI becomes relevant only if:
+1. The project ever moves to a Python/Node backend that can run it natively, or
+2. The cloud API launches with competitive pricing and a simple HTTP interface comparable to Jina Reader
 Returns Markdown string or `null` (failed). Consumer never receives or parses HTML.
