@@ -3,9 +3,9 @@ import { getLlmApiKey } from "@/lib/llm-key";
 import { isMockMode } from "./mock";
 
 const FEW_SHOT_EXAMPLES = [
-  "Explores how Astro 5's Content Layer API unifies local files and remote data sources into a single typed collection, cutting fetch boilerplate and enabling incremental builds.",
-  "Explains how Cloudflare Workers AI runs serverless GPU inference at the edge, listing the curated open-source model catalog and the minimal setup needed to call a model from a Worker.",
-  "Covers React 19's new hooks — useActionState, useFormStatus, useOptimistic — and shows how server actions replace manual fetch/state wiring for form submissions.",
+  "A deep dive into how Cloudflare Workers handles cold starts, showing measured latency improvements over traditional serverless with practical deployment patterns.",
+  "Explores the tension between prompt engineering and fine-tuning for LLM applications, with a cost-accuracy framework for choosing the right approach.",
+  "Practical guide to Postgres row-level security: how to write policies that are both correct and fast, with common anti-patterns to avoid.",
 ];
 
 const INPUT_CAP = 6000;
