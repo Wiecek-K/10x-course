@@ -336,9 +336,9 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Automated
 
-- [x] 1.1 Type checking passes (`bun run build`)
-- [x] 1.2 Linting passes (`bun run lint`)
-- [x] 1.3 `wrangler.jsonc` parses (`bunx wrangler types --check`)
+- [x] 1.1 Type checking passes (`bun run build`) — 8646130
+- [x] 1.2 Linting passes (`bun run lint`) — 8646130
+- [x] 1.3 `wrangler.jsonc` parses (`bunx wrangler types --check`) — 8646130
 
 #### Manual
 
