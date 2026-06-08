@@ -10,7 +10,7 @@
  * After running, commit the updated fixture files to share with the team.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -58,7 +58,7 @@ async function recordFirecrawl(url: string, apiKey: string): Promise<string> {
   return markdown;
 }
 
-async function recordDescribe(content: string, apiKey: string): Promise<void> {
+async function recordDescribe(content: string, apiKey: string, sourceUrl: string): Promise<void> {
   console.log("[openai] Generating description...");
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -85,8 +85,9 @@ async function recordDescribe(content: string, apiKey: string): Promise<void> {
     }),
   });
 
+  const status = response.status;
   if (!response.ok) {
-    throw new Error(`OpenAI ${response.status.toString()}: ${await response.text()}`);
+    throw new Error(`OpenAI ${status.toString()}: ${await response.text()}`);
   }
 
   const raw: unknown = await response.json();
@@ -94,8 +95,22 @@ async function recordDescribe(content: string, apiKey: string): Promise<void> {
   const description = data?.choices?.[0]?.message?.content?.trim();
   if (!description) throw new Error("Empty description in OpenAI response");
 
+  // flat fixture — consumed by isMockMode() path in describe.ts
   writeFileSync(join(FIXTURES_DIR, "describe-response.txt"), description);
   console.log("✓ describe-response.txt written");
+
+  // per-URL raw JSON fixture — mirrors Firecrawl structure for test/debug use
+  const describeDir = join(FIXTURES_DIR, "describe");
+  mkdirSync(describeDir, { recursive: true });
+  const slug = new URL(sourceUrl).hostname
+    .replace(/^www\./, "")
+    .concat(new URL(sourceUrl).pathname)
+    .replace(/\/+$/, "")
+    .replace(/[^a-z0-9]+/gi, "-")
+    .toLowerCase();
+  const rawFixture = JSON.stringify({ status, body: raw }, null, 2);
+  writeFileSync(join(describeDir, `${slug}.json`), rawFixture);
+  console.log(`✓ describe/${slug}.json written`);
 }
 
 async function main(): Promise<void> {
@@ -116,7 +131,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  await recordDescribe(markdown, llmKey);
+  await recordDescribe(markdown, llmKey, sampleUrl);
   console.log("\nAll fixtures recorded. Commit src/lib/services/__fixtures__/ to share with the team.");
 }
 

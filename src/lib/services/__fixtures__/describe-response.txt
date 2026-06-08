@@ -1,1 +1,2 @@
-"Announces Workers AI, a serverless AI inference platform that enables developers to run popular machine learning models using Cloudflare's global GPU network, fostering ease of use and accessibility."
+- "Introduces Workers AI, a serverless platform enabling developers to easily run AI models with minimal code on Cloudflare's global GPU network, emphasizing accessibility and privacy."
+- "Details the launch of curated open-source AI models for a variety of tasks including text generation and image classification, designed to work effortlessly within Cloudflare’s infrastructure."
