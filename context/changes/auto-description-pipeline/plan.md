@@ -118,7 +118,26 @@ Add the LLM key to the env schema and runtime config, create the key-access help
 
 The Firecrawl page scraper, a YouTube URL detector, and a thin single-entry orchestrator. MVP is single-tier (Firecrawl only) — a page Firecrawl can't reach is marked unsupported (`failed`); the full 3-tier flow (Wayback archive + paid proxy) is deferred post-MVP (roadmap §Parked). All return Markdown/text or null.
 
+This phase also introduces the **dev mock system**: after a first confirmed real API response, fixture files are committed to the repo and used instead of live API calls during development — prevents burning free tiers on every test run.
+
 ### Changes Required:
+
+#### 0. Dev mock system
+
+**Files**: `src/lib/services/__fixtures__/firecrawl-response.md` (new), `src/lib/services/__fixtures__/describe-response.txt` (new), `scripts/record-fixtures.ts` (new), `astro.config.mjs` (add `USE_API_MOCKS`), `.dev.vars` + `.env.example`
+
+**Intent**: Allow local development against saved API responses so free-tier API credits aren't consumed on every test run.
+
+**Contract**:
+
+- `USE_API_MOCKS: envField.string({ context: "server", access: "secret", optional: true })` added to `astro.config.mjs` env schema. Helper: `const isMockMode = () => USE_API_MOCKS === "true"`. Importing `USE_API_MOCKS` directly would throw on falsy coercion — keep the string comparison in a helper.
+- `.dev.vars`: add `USE_API_MOCKS=false` (flip to `true` when developing without live calls). `.env.example`: add `USE_API_MOCKS=false`.
+- `src/lib/services/__fixtures__/firecrawl-response.md` — saved Firecrawl markdown for a representative article URL. Initially empty/placeholder until the recording script populates it.
+- `src/lib/services/__fixtures__/describe-response.txt` — saved OpenAI description output. Initially empty/placeholder.
+- Both fixtures are imported via Vite `?raw` in their respective services (bundled at build time; acceptable fixture size ~10–50 KB). Since the optional `USE_API_MOCKS` env var is server-only and resolved at runtime, the fixture string is always bundled — a small dev-convenience trade-off for MVP.
+- `scripts/record-fixtures.ts` — standalone Bun script (not a Worker). Run once with `bun run scripts/record-fixtures.ts` to call real APIs and overwrite the fixture files. Re-run whenever fixture refresh is needed.
+
+> **Constraint (CF Workers)**: Workers cannot write to the filesystem at runtime. Recording must happen outside the Worker via the Bun script. Playback uses static `?raw` bundle-time imports.
 
 #### 1. Firecrawl tier
 
@@ -126,7 +145,7 @@ The Firecrawl page scraper, a YouTube URL detector, and a thin single-entry orch
 
 **Intent**: Primary page scraper — fetch clean Markdown for a URL via Firecrawl cloud API.
 
-**Contract**: `scrapeFirecrawl(url: string): Promise<string | null>` — `POST https://api.firecrawl.dev/v2/scrape` with body `{ url, formats: ["markdown"] }` and header `Authorization: Bearer <FIRECRAWL_API_KEY>`. Resolves key from `astro:env/server` (`FIRECRAWL_API_KEY`); returns `null` if key unset. **Error taxonomy** (shared by all scrape/describe services, see Key Discoveries): return `null` on a *definitive* miss (HTTP 402 insufficient credits, or response `data.data.markdown` empty/null — nothing to retry); **throw** on a *transient* fault (HTTP 429/5xx or a network/`fetch` rejection) so the consumer's `msg.retry()` path engages. Return `data.data.markdown` string on success (note double nesting in Firecrawl envelope). Free plan: 1,000 pages/month, 10 RPM — sufficient for MVP dogfooding.
+**Contract**: `scrapeFirecrawl(url: string): Promise<string | null>` — if `isMockMode()` returns `true`, return the `__fixtures__/firecrawl-response.md` `?raw` import immediately (no network call). Otherwise: `POST https://api.firecrawl.dev/v2/scrape` with body `{ url, formats: ["markdown"] }` and header `Authorization: Bearer <FIRECRAWL_API_KEY>`. Resolves key from `astro:env/server` (`FIRECRAWL_API_KEY`); returns `null` if key unset. **Error taxonomy** (shared by all scrape/describe services, see Key Discoveries): return `null` on a *definitive* miss (HTTP 402 insufficient credits, or response `data.data.markdown` empty/null — nothing to retry); **throw** on a *transient* fault (HTTP 429/5xx or a network/`fetch` rejection) so the consumer's `msg.retry()` path engages. Return `data.data.markdown` string on success (note double nesting in Firecrawl envelope). Free plan: 1,000 pages/month, 10 RPM — sufficient for MVP dogfooding.
 
 #### 2. YouTube URL detection
 
@@ -179,7 +198,7 @@ Turn scraped content into a 1-2 sentence micro-description via gpt-4o-mini using
 
 **Intent**: Generate the micro-description, matching a consistent house style via few-shot examples (the talk's proven quality lever, adapted to hardcoded examples since no per-user corpus exists yet).
 
-**Contract**: `describeContent(content: string, userId: string): Promise<string | null>`. Resolves the key via `getLlmApiKey(userId)` (returns `null` if no key). POSTs to `https://api.openai.com/v1/chat/completions` with `model: "gpt-4o-mini"`, `max_tokens: ~120`. The system/user messages embed 2-3 hardcoded example micro-descriptions as the style template, then the scraped content. **Input cap (MVP, locked):** truncate scraped content to **~6,000 characters (~1,500 tokens)** before the call — bounds per-link cost and the ~11s latency claim; revisit under the parked roadmap task below. **Few-shot examples (MVP):** ship 2-3 `TODO`-marked placeholder micro-descriptions written in-plan/in-code before Phase 3 starts — placeholder house style for MVP, deliberately not researched yet. Returns the trimmed completion text. **Error taxonomy** (same split as the scrape services): return `null` only for definitive non-retryable cases (no key from `getLlmApiKey`, or an empty/blank completion); **throw** on a transient OpenAI fault (HTTP 429/5xx, network error) so the consumer retries. Do not collapse a transient 429 into `null` — that would permanently fail a link whose content scraped fine.
+**Contract**: `describeContent(content: string, userId: string): Promise<string | null>`. If `isMockMode()` returns `true`, return the `__fixtures__/describe-response.txt` `?raw` import immediately (no network call, no key needed). Otherwise: resolves the key via `getLlmApiKey(userId)` (returns `null` if no key). POSTs to `https://api.openai.com/v1/chat/completions` with `model: "gpt-4o-mini"`, `max_tokens: ~120`. The system/user messages embed 2-3 hardcoded example micro-descriptions as the style template, then the scraped content. **Input cap (MVP, locked):** truncate scraped content to **~6,000 characters (~1,500 tokens)** before the call — bounds per-link cost and the ~11s latency claim; revisit under the parked roadmap task below. **Few-shot examples (MVP):** ship 2-3 `TODO`-marked placeholder micro-descriptions written in-plan/in-code before Phase 3 starts — placeholder house style for MVP, deliberately not researched yet. Returns the trimmed completion text. **Error taxonomy** (same split as the scrape services): return `null` only for definitive non-retryable cases (no key from `getLlmApiKey`, or an empty/blank completion); **throw** on a transient OpenAI fault (HTTP 429/5xx, network error) so the consumer retries. Do not collapse a transient 429 into `null` — that would permanently fail a link whose content scraped fine.
 
 The few-shot framing is the non-obvious part — shape it like:
 
@@ -353,7 +372,8 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Manual
 
-- [ ] 2.3 `scrapeContent()` returns Markdown for article, null for dead domain; `isYouTubeUrl()` returns true for watch/shorts/youtu.be, false otherwise
+- [ ] 2.3 `USE_API_MOCKS=true` → `scrapeContent()` returns fixture content without network call
+- [ ] 2.4 `USE_API_MOCKS=false` → `scrapeContent()` hits real Firecrawl, saves response via recording script; `isYouTubeUrl()` returns true for watch/shorts/youtu.be, false otherwise
 
 ### Phase 3: LLM Micro-description Service
 
@@ -364,7 +384,8 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Manual
 
-- [ ] 3.3 `describeContent()` returns styled 1-2 sentence description; null without key (no throw)
+- [ ] 3.3 `USE_API_MOCKS=true` → `describeContent()` returns fixture content without network call
+- [ ] 3.4 `USE_API_MOCKS=false` → `describeContent()` returns styled 1-2 sentence description; null without key (no throw); recording script saves response to fixture
 
 ### Phase 4: Queue Consumer
 
