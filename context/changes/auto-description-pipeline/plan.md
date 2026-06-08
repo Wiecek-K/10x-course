@@ -367,8 +367,8 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Automated
 
-- [ ] 2.1 Type checking passes (`bun run build`)
-- [ ] 2.2 Linting passes (`bun run lint`)
+- [x] 2.1 Type checking passes (`bun run build`)
+- [x] 2.2 Linting passes (`bun run lint`)
 
 #### Manual
 
