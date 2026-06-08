@@ -3,7 +3,7 @@ import firecrawlFixture from "./__fixtures__/firecrawl-response.md?raw";
 import { isFirecrawlMockMode } from "./mock";
 
 interface FirecrawlScrapeResponse {
-  data: {
+  data?: {
     markdown: string | null;
   };
 }
@@ -41,5 +41,5 @@ export async function scrapeFirecrawl(url: string): Promise<string | null> {
 
   const raw: unknown = await response.json();
   const data = raw as FirecrawlScrapeResponse;
-  return data.data.markdown ?? null;
+  return data.data?.markdown ?? null;
 }

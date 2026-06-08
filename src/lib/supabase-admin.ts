@@ -1,4 +1,4 @@
-// RLS-bypassing admin client — import ONLY from the bot webhook endpoint.
+// RLS-bypassing admin client — import ONLY from the bot webhook endpoint and the queue consumer.
 // Uses the service-role key; never expose to the browser.
 // Tech debt: replace with SECURITY DEFINER RPC post-MVP (TAB-13).
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";

@@ -391,14 +391,14 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Automated
 
-- [ ] 4.1 Type checking passes (`bun run build`)
-- [ ] 4.2 Linting passes (`bun run lint`)
+- [x] 4.1 Type checking passes (`bun run build`)
+- [x] 4.2 Linting passes (`bun run lint`)
 
 #### Manual
 
-- [ ] 4.3 Enqueued link transitions pending → processing → done with micro_description
-- [ ] 4.4 Guaranteed-fail URL ends `failed`, micro_description null
-- [ ] 4.5 One message processed per invocation
+- [x] 4.3 Enqueued link transitions pending → processing → done with micro_description
+- [x] 4.4 Guaranteed-fail URL ends `failed`, micro_description null
+- [x] 4.5 One message processed per invocation
 
 ### Phase 5: Frontend Live Updates
 
