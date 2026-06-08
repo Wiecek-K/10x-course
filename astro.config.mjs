@@ -28,6 +28,7 @@ export default defineConfig({
       TELEGRAM_BOT_USERNAME: envField.string({ context: "server", access: "secret", optional: true }),
       LLM_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
       FIRECRAWL_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      USE_API_MOCKS: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });
