@@ -69,17 +69,27 @@ async function recordDescribe(content: string, apiKey: string, sourceUrl: string
     body: JSON.stringify({
       model: "gpt-4o-mini",
       max_tokens: 120,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "micro_description",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: { description: { type: "string" } },
+            required: ["description"],
+            additionalProperties: false,
+          },
+        },
+      },
       messages: [
         {
           role: "system",
-          content: `You write one-to-two sentence micro-descriptions of saved links in a consistent house style. Match the structure, length, and tone of these examples:
-- "A deep dive into how Cloudflare Workers handles cold starts, showing measured latency improvements over traditional serverless with practical deployment patterns."
-- "Explores the tension between prompt engineering and fine-tuning for LLM applications, with a cost-accuracy framework for choosing the right approach."
-- "Practical guide to Postgres row-level security: how to write policies that are both correct and fast, with common anti-patterns to avoid."`,
+          content: `You write micro-descriptions of saved links. Write 1-2 sentences. Plain text only — no markdown, no bullet points, no formatting. Match the length and tone of these examples:\nExplains how Postgres VACUUM reclaims dead tuple storage, covers autovacuum threshold tuning for high-churn tables, and shows how to read pg_stat_user_tables to diagnose bloat.\nCovers the Cloudflare Workers execution model: V8 isolate lifecycle, what triggers a cold start, how the 128 MB memory limit applies per request, and how CPU time is billed.\nDescribes React Server Components: which rendering runs server-side, where client boundaries split the tree, and how RSC payloads differ from server-rendered HTML.\nDetails how git stores commits, trees, and blobs as SHA-1-addressed objects, and how packfiles compress history using delta chains against a sliding window of recent objects.\nBenchmarks cold start latency across AWS Lambda, Cloudflare Workers, and Fly.io for Node.js, Python, and Rust runtimes under isolated and warm traffic conditions.`,
         },
         {
           role: "user",
-          content: `Summarize the following content in that same style:\n\n${content.slice(0, 6000)}`,
+          content: `Write a micro-description for the following content:\n\n${content.slice(0, 6000)}`,
         },
       ],
     }),
@@ -92,10 +102,15 @@ async function recordDescribe(content: string, apiKey: string, sourceUrl: string
 
   const raw: unknown = await response.json();
   const data = raw as { choices: { message: { content: string } }[] };
-  const description = data?.choices?.[0]?.message?.content?.trim();
-  if (!description) throw new Error("Empty description in OpenAI response");
+  const jsonContent = data?.choices?.[0]?.message?.content?.trim();
+  if (!jsonContent) throw new Error("Empty description in OpenAI response");
 
-  // flat fixture — consumed by isMockMode() path in describe.ts
+  // structured output returns JSON string — extract plain text for flat fixture
+  const parsed = JSON.parse(jsonContent) as { description: string };
+  const description = parsed.description.trim();
+  if (!description) throw new Error("Empty description field in OpenAI structured output");
+
+  // flat fixture — consumed by isLlmMockMode() path in describe.ts (plain text only)
   writeFileSync(join(FIXTURES_DIR, "describe-response.txt"), description);
   console.log("✓ describe-response.txt written");
 

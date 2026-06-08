@@ -1,16 +1,16 @@
 {
   "status": 200,
   "body": {
-    "id": "chatcmpl-DoRd9G7gpziipzosl0rLF6ruSJw9P",
+    "id": "chatcmpl-DoSLWzXdAjz7S57X7OTUW1131r9VY",
     "object": "chat.completion",
-    "created": 1780914983,
+    "created": 1780917734,
     "model": "gpt-4o-mini-2024-07-18",
     "choices": [
       {
         "index": 0,
         "message": {
           "role": "assistant",
-          "content": "- \"Introduces Workers AI, a serverless platform enabling developers to easily run AI models with minimal code on Cloudflare's global GPU network, emphasizing accessibility and privacy.\"\n- \"Details the launch of curated open-source AI models for a variety of tasks including text generation and image classification, designed to work effortlessly within Cloudflare’s infrastructure.\"",
+          "content": "{\"description\":\"Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.\"}",
           "refusal": null,
           "annotations": []
         },
@@ -19,11 +19,11 @@
       }
     ],
     "usage": {
-      "prompt_tokens": 1795,
-      "completion_tokens": 67,
-      "total_tokens": 1862,
+      "prompt_tokens": 1918,
+      "completion_tokens": 62,
+      "total_tokens": 1980,
       "prompt_tokens_details": {
-        "cached_tokens": 1664,
+        "cached_tokens": 1792,
         "audio_tokens": 0
       },
       "completion_tokens_details": {
@@ -34,6 +34,6 @@
       }
     },
     "service_tier": "default",
-    "system_fingerprint": "fp_3282593d8d"
+    "system_fingerprint": "fp_17fcf59fc6"
   }
 }

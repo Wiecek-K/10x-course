@@ -1,6 +1,6 @@
 import { FIRECRAWL_API_KEY } from "astro:env/server";
 import firecrawlFixture from "./__fixtures__/firecrawl-response.md?raw";
-import { isMockMode } from "./mock";
+import { isFirecrawlMockMode } from "./mock";
 
 interface FirecrawlScrapeResponse {
   data: {
@@ -9,7 +9,7 @@ interface FirecrawlScrapeResponse {
 }
 
 export async function scrapeFirecrawl(url: string): Promise<string | null> {
-  if (isMockMode()) {
+  if (isFirecrawlMockMode()) {
     return firecrawlFixture || null;
   }
 
