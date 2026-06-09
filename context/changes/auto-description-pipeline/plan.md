@@ -361,7 +361,7 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Manual
 
-- [ ] 1.4 `bun run dev` boots without env errors; `getLlmApiKey` returns configured key
+- [x] 1.4 `bun run dev` boots without env errors; `getLlmApiKey` returns configured key
 
 ### Phase 2: Scraping Services
 
@@ -372,43 +372,43 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Manual
 
-- [ ] 2.3 `USE_API_MOCKS=true` → `scrapeContent()` returns fixture content without network call
-- [ ] 2.4 `USE_API_MOCKS=false` → `scrapeContent()` hits real Firecrawl, saves response via recording script; `isYouTubeUrl()` returns true for watch/shorts/youtu.be, false otherwise
+- [x] 2.3 `USE_API_MOCKS=true` → `scrapeContent()` returns fixture content without network call
+- [x] 2.4 `USE_API_MOCKS=false` → `scrapeContent()` hits real Firecrawl, saves response via recording script; `isYouTubeUrl()` returns true for watch/shorts/youtu.be, false otherwise
 
 ### Phase 3: LLM Micro-description Service
 
 #### Automated
 
-- [ ] 3.1 Type checking passes (`bun run build`)
-- [ ] 3.2 Linting passes (`bun run lint`)
+- [x] 3.1 Type checking passes (`bun run build`)
+- [x] 3.2 Linting passes (`bun run lint`)
 
 #### Manual
 
-- [ ] 3.3 `USE_API_MOCKS=true` → `describeContent()` returns fixture content without network call
-- [ ] 3.4 `USE_API_MOCKS=false` → `describeContent()` returns styled 1-2 sentence description; null without key (no throw); recording script saves response to fixture
+- [x] 3.3 `USE_API_MOCKS=true` → `describeContent()` returns fixture content without network call
+- [x] 3.4 `USE_API_MOCKS=false` → `describeContent()` returns styled 1-2 sentence description; null without key (no throw); recording script saves response to fixture
 
 ### Phase 4: Queue Consumer
 
 #### Automated
 
-- [x] 4.1 Type checking passes (`bun run build`)
-- [x] 4.2 Linting passes (`bun run lint`)
+- [x] 4.1 Type checking passes (`bun run build`) — ad03a75
+- [x] 4.2 Linting passes (`bun run lint`) — ad03a75
 
 #### Manual
 
-- [x] 4.3 Enqueued link transitions pending → processing → done with micro_description
-- [x] 4.4 Guaranteed-fail URL ends `failed`, micro_description null
-- [x] 4.5 One message processed per invocation
+- [x] 4.3 Enqueued link transitions pending → processing → done with micro_description — ad03a75
+- [x] 4.4 Guaranteed-fail URL ends `failed`, micro_description null — ad03a75
+- [x] 4.5 One message processed per invocation — ad03a75
 
 ### Phase 5: Frontend Live Updates
 
 #### Automated
 
-- [ ] 5.1 Type checking passes (`bun run build`)
-- [ ] 5.2 Linting passes (`bun run lint`)
+- [x] 5.1 Type checking passes (`bun run build`)
+- [x] 5.2 Linting passes (`bun run lint`)
 
 #### Manual
 
-- [ ] 5.3 Link transitions render live (pending → processing → done + description), no reload
-- [ ] 5.4 Failed link shows red badge live
-- [ ] 5.5 Hard-refresh preserves rendered state
+- [x] 5.3 Link transitions render live (pending → processing → done + description), no reload
+- [x] 5.4 Failed link shows red badge live
+- [x] 5.5 Hard-refresh preserves rendered state

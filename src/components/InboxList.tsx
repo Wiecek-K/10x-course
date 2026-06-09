@@ -54,15 +54,30 @@ export default function InboxList({ initialLinks, userId, supabaseUrl, supabaseA
             >
               {link.url}
             </a>
+            {link.micro_description && <p className="mt-1 text-xs text-white/60">{link.micro_description}</p>}
             <span className="mt-0.5 block text-xs text-white/40">{formatRelativeTime(link.created_at)}</span>
           </div>
-          {link.processing_status === "pending" && (
+          {(link.processing_status === "pending" ||
+            link.processing_status === "scraping" ||
+            link.processing_status === "describing") && (
             <span
               className={cn(
-                "shrink-0 rounded-full border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5 text-xs font-medium text-yellow-300",
+                "shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium",
+                link.processing_status === "pending"
+                  ? "border-yellow-400/30 bg-yellow-400/10 text-yellow-300"
+                  : "border-blue-400/30 bg-blue-400/10 text-blue-300",
               )}
             >
-              pending
+              {link.processing_status === "pending" ? "pending" : "processing"}
+            </span>
+          )}
+          {link.processing_status === "failed" && (
+            <span
+              className={cn(
+                "shrink-0 rounded-full border border-red-400/30 bg-red-400/10 px-2 py-0.5 text-xs font-medium text-red-300",
+              )}
+            >
+              failed
             </span>
           )}
         </li>

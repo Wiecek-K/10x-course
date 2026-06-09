@@ -31,6 +31,13 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
             setLinks((prev) => [payload.new as Link, ...prev]);
           },
         )
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "links", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            setLinks((prev) => prev.map((l) => (l.id === payload.new.id ? (payload.new as Link) : l)));
+          },
+        )
         .subscribe();
     })();
 
