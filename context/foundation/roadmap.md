@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-06-07
+updated: 2026-06-09
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -32,7 +32,7 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 | F-01 | `domain-data-foundation`        | (foundation) schemat `links` + RLS per user_id + minimalne API SSR                                                                       | —                | NFR "Izolacja danych", Access Control                                          | done     |
 | F-02 | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki                                                          | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md                            | done     |
 | S-01 | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)                                                           | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s"                               | done     |
-| S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | proposed |
+| S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | done     |
 | S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
 | S-03 | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s                                                                       | F-01, S-02       | FR-007 (NL search), FR-009, US-02                                              | proposed |
 | S-06 | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane              | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary            | proposed |
@@ -133,7 +133,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
   - Provider LLM dla generowania opisu + jak przyjmujemy BYOK klucz — Owner: TBD. Block: no.
   - Źródło napisów YouTube (Rapid Hub z PRD socrates) — Owner: TBD. Block: no.
 - **Risk:** najcięższy slice w roadmapie — 3 tiery scrapingu + LLM call + lifecycle update + widoczny stan "jeszcze przetwarzam". Świadomie akceptowane jako koszt udowodnienia inwersji (`main_goal: market-feedback`), ale to jest gdzie `top_blocker: capacity` najmocniej uderza — zaplanować podział na pod-jednostki na poziomie /10x-plan.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Closure flow + per-link manual edit
 
@@ -244,3 +244,4 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **F-02: (foundation) kolejka `tabzero-link-processing` podpięta w `wrangler.jsonc`; helper producer importowalny z API; minimalny consumer Worker który ack'uje jobs (jeszcze nic nie robi). Brak scrapingu, brak LLM calls — to wszystko jest w S-02.** — Archived 2026-06-01 → `context/archive/2026-05-29-link-processing-queue/`. Lesson: —.
 - **S-01: użytkownik wysyła URL do bota w komunikatorze; bot odpowiada potwierdzeniem w ≤2s; link pojawia się w inboxie web app (jako URL, opis przyjdzie z S-02).** — Archived 2026-06-06 → `context/archive/2026-06-03-bot-capture-to-inbox/`. Lesson: —.
 - **Dev-tooling: katalog wyjściowy Playwright MCP (TAB-15)** — Archived 2026-06-07 → `context/archive/2026-06-05-playwright-mcp-output-dir/`. Lesson: —.
+- **S-02: zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie** — Archived 2026-06-09 → `context/archive/2026-06-07-auto-description-pipeline/`. Lesson: —.

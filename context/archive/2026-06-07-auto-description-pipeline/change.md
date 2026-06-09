@@ -1,11 +1,11 @@
 ---
 change_id: auto-description-pipeline
 title: Auto-description pipeline for saved links
-status: impl_reviewed
+status: archived
 created: 2026-06-07
 updated: 2026-06-09
 
-archived_at: null
+archived_at: 2026-06-09T13:09:26Z
 ---
 
 ## Notes
