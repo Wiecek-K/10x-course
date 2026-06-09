@@ -6,6 +6,13 @@
         "hooks": [
           {
             "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-format.sh",
+            "asyncRewake": true,
+            "timeout": 30,
+            "statusMessage": "Formatting..."
+          },
+          {
+            "type": "command",
             "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-lint.sh",
             "asyncRewake": true,
             "timeout": 30,

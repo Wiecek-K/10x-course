@@ -130,8 +130,8 @@ async function recordDescribe(content: string, apiKey: string, sourceUrl: string
 
 async function main(): Promise<void> {
   const vars = loadDevVars();
-  const firecrawlKey = (vars["FIRECRAWL_API_KEY"] ?? process.env["FIRECRAWL_API_KEY"]) ?? "";
-  const llmKey = (vars["LLM_API_KEY"] ?? process.env["LLM_API_KEY"]) ?? "";
+  const firecrawlKey = vars["FIRECRAWL_API_KEY"] ?? process.env["FIRECRAWL_API_KEY"] ?? "";
+  const llmKey = vars["LLM_API_KEY"] ?? process.env["LLM_API_KEY"] ?? "";
   const sampleUrl = process.argv[2] ?? "https://blog.cloudflare.com/workers-ai/";
 
   if (!firecrawlKey) {
