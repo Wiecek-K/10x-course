@@ -184,3 +184,17 @@ List endpoints (`GET /api/links`) are exempt — an empty array is the correct, 
 **Rule**: When implementation discovers a needed migration / schema / config change that wasn't planned, append it to the plan's "Migration Notes" (and rollback steps) in the same phase that adds it — don't let the plan drift from the actual schema. A benign, correct change still has to be documented so the plan stays the source of truth.
 
 **Applies to**: every change with a `## Migration Notes` section; any phase that touches `supabase/migrations/`, `wrangler.jsonc`, or `astro.config.mjs` beyond what the plan listed.
+
+---
+
+## Dev environment uses remote Supabase — no local stack
+
+This project's development setup (`wrangler dev`) connects to the **remote** Supabase instance, not a local one. `bunx supabase start` (Docker stack) is not used.
+
+**Consequences**:
+- DB schema changes require applying migrations to remote: `bunx supabase db push` or `bunx supabase migration up --linked`.
+- Supabase Studio at the remote project URL is the live view — not `http://localhost:54323`.
+- Data written during local dev lands in the real remote DB. Avoid destructive test data.
+- The `SUPABASE_URL` / `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` in `.dev.vars` point at remote, so any queue consumer, bot webhook, or admin-client path runs against the real schema.
+
+**Applies to**: every phase that adds a migration — verify it lands on remote before testing locally.

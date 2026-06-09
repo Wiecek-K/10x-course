@@ -14,6 +14,7 @@ export default defineConfig({
     plugins: [tailwindcss()],
     optimizeDeps: {
       exclude: ["@supabase/ssr"],
+      include: ["cookie"],
     },
   },
   adapter: cloudflare(),
@@ -25,6 +26,10 @@ export default defineConfig({
       TELEGRAM_BOT_TOKEN: envField.string({ context: "server", access: "secret", optional: true }),
       TELEGRAM_WEBHOOK_SECRET: envField.string({ context: "server", access: "secret", optional: true }),
       TELEGRAM_BOT_USERNAME: envField.string({ context: "server", access: "secret", optional: true }),
+      LLM_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      FIRECRAWL_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      USE_FIRECRAWL_MOCK: envField.string({ context: "server", access: "secret", optional: true }),
+      USE_LLM_MOCK: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });

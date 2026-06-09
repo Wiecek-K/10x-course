@@ -17,7 +17,7 @@ export interface QueueMessage {
   userId: string;
 }
 
-export type ProcessingStatus = "pending" | "processing" | "done" | "failed";
+export type ProcessingStatus = "pending" | "scraping" | "describing" | "done" | "failed";
 
 export type Link = Omit<Database["public"]["Tables"]["links"]["Row"], "processing_status"> & {
   processing_status: ProcessingStatus;
