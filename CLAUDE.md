@@ -78,7 +78,7 @@ All generated file content must be in **English** — UI strings, code comments,
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`) runs lint + build on every push and PR to `master`. Requires `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
+GitHub Actions (`.github/workflows/ci.yml`) runs lint + build on every push and PR to `main`. Requires `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
 
 ## Playwright
 
