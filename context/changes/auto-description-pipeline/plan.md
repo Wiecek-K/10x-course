@@ -404,11 +404,11 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 
 #### Automated
 
-- [x] 5.1 Type checking passes (`bun run build`)
-- [x] 5.2 Linting passes (`bun run lint`)
+- [x] 5.1 Type checking passes (`bun run build`) — 03462ac
+- [x] 5.2 Linting passes (`bun run lint`) — 03462ac
 
 #### Manual
 
-- [x] 5.3 Link transitions render live (pending → processing → done + description), no reload
-- [x] 5.4 Failed link shows red badge live
-- [x] 5.5 Hard-refresh preserves rendered state
+- [x] 5.3 Link transitions render live (pending → processing → done + description), no reload — 03462ac
+- [x] 5.4 Failed link shows red badge live — 03462ac
+- [x] 5.5 Hard-refresh preserves rendered state — 03462ac
