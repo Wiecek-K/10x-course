@@ -347,6 +347,18 @@ No DB migrations. Config changes: `astro.config.mjs` env schema (`LLM_API_KEY` o
 - INSERT-only subscription to extend: `src/components/hooks/useLinks.ts:25-34`
 - Badge logic to extend: `src/components/InboxList.tsx:59-67`
 
+## Addenda
+
+### Addendum 2026-06-09 — processing_status expanded (supersedes "no new migrations" guardrail)
+
+**What changed vs. plan:** the plan body uses a single interim status `processing` and "What We're NOT Doing" §37 states *"no new migrations (schema already supports everything)"*. The implementation instead **expanded** the `processing_status` enum from `pending | processing | done | failed` to `pending | scraping | describing | done | failed` via migration `supabase/migrations/20260608153200_expand_processing_status.sql`, and `src/worker.ts` / `src/types.ts` / `src/components/InboxList.tsx` build on the two interim states.
+
+**Why (owner decision, not agent drift):** this was a deliberate call by the project owner. The error was at the plan-review stage — the original four-state enum was too coarse: it gave worse UX (the inbox couldn't show *which* stage a link was in) and made debugging harder (a stuck row didn't reveal whether scrape or describe failed). Splitting `processing` into `scraping` / `describing` fixes both. The "no new migrations" guardrail should have been updated when this decision was made; this addendum records it retroactively (impl-review 2026-06-09, F4 Option A).
+
+**Safety:** the migration only drops + re-adds the CHECK constraint (RLS untouched), and `UPDATE ... processing → failed` runs before the new constraint is added, so no existing row can violate it. No data loss.
+
+**Net effect on guardrail:** §37's "no new migrations" no longer holds — read it as superseded by this addendum. The `QueueMessage` shape is unchanged (that part of §37 still stands).
+
 ## Progress
 
 > Convention: `- [ ]` pending, `- [x]` done. Append ` — <commit sha>` when a step lands. Do not rename step titles. See `references/progress-format.md`.

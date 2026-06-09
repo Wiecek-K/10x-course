@@ -21,7 +21,17 @@ export default {
       return;
     }
 
-    const { data: linkRow } = await admin.from("links").select("url").eq("id", msg.body.linkId).single();
+    const { data: linkRow, error: lookupError } = await admin
+      .from("links")
+      .select("url")
+      .eq("id", msg.body.linkId)
+      .maybeSingle();
+    if (lookupError) {
+      // eslint-disable-next-line no-console -- transient DB read failure, queue will retry
+      console.error(`[queue] link ${msg.body.linkId} lookup failed — retrying:`, lookupError);
+      msg.retry();
+      return;
+    }
     if (!linkRow) {
       // eslint-disable-next-line no-console -- link deleted before processing
       console.error(`[queue] link ${msg.body.linkId} not found — acking`);
