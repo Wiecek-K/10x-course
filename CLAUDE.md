@@ -16,7 +16,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pre-commit hooks (husky + lint-staged): runs `eslint --fix` + `prettier --write` on `*.{ts,tsx,astro}` and `prettier --write` on `*.{json,css}`.
 
-No test runner is configured yet.
+- `bun run test` — Vitest unit suite (colocated `src/**/*.test.ts`; Node environment)
+- `bun run test:watch` — Vitest in watch mode for local dev
+
+## Git Workflow
+
+**Never commit directly to `main` without explicit user confirmation.** Before starting any implementation work, verify the current branch is not `main`. If on `main`, stop and ask the user which branch to use or whether to create one. Direct commits to `main` require the user to say so explicitly — do not infer permission from prior conversation context.
 
 ## Architecture
 

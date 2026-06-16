@@ -440,23 +440,23 @@ None. Net-new test infrastructure; no existing tests to migrate.
 
 #### Automated
 
-- [x] 3.1 Vendor classification tests pass
-- [x] 3.2 No internal modules mocked beyond HTTP/env/key boundary
-- [x] 3.3 Lint/format clean
+- [x] 3.1 Vendor classification tests pass — 9d924bf
+- [x] 3.2 No internal modules mocked beyond HTTP/env/key boundary — 9d924bf
+- [x] 3.3 Lint/format clean — 9d924bf
 
 #### Manual
 
-- [ ] 3.4 `astro:env/server` interception works cleanly (alias fallback documented if used)
+- [x] 3.4 `astro:env/server` interception works cleanly (alias fallback documented if used) — 9d924bf
 
 ### Phase 4: CI gate + doc fixes
 
 #### Automated
 
-- [ ] 4.1 CI workflow includes test step
-- [ ] 4.2 Full local gate passes
-- [ ] 4.3 Test-plan no longer contains "fallback marker present"
+- [x] 4.1 CI workflow includes test step
+- [x] 4.2 Full local gate passes
+- [x] 4.3 Test-plan no longer contains "fallback marker present"
 
 #### Manual
 
-- [ ] 4.4 PR shows test job executing + gating in GitHub Actions
-- [ ] 4.5 Edited test-plan sections accurate; Phase 1 reads `complete`
+- [x] 4.4 PR shows test job executing + gating in GitHub Actions
+- [x] 4.5 Edited test-plan sections accurate; Phase 1 reads `complete`

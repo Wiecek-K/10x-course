@@ -61,7 +61,7 @@ is folded into #3's "must challenge" and the §7 boundary on testing vendor inte
 
 | Risk | What would prove protection | Must challenge | Context `/10x-research` must ground | Likely cheapest layer | Anti-pattern to avoid |
 |------|-----------------------------|----------------|--------------------------------------|-----------------------|-----------------------|
-| #1 | Scrape miss → terminal `failed` state + visual flag (never stuck); any error → link preserved, never lost; LLM failure → fallback marker present | "`ack()` after a failed terminal write = success" — a stuck row still looks acked | consumer state machine in `worker.ts`; status enum in `src/types.ts`; describe fallback string | unit (state transitions + retry taxonomy) + integration (mocked vendors) | asserting exact LLM output text; over-mocking the consumer's own logic |
+| #1 | Scrape miss → terminal `failed` state + visual flag (never stuck); any error → link preserved, never lost; LLM failure (`null`) → terminal `failed`, link preserved, never stuck; the only fallback string is the YouTube placeholder | "`ack()` after a failed terminal write = success" — a stuck row still looks acked | consumer state machine in `worker.ts`; status enum in `src/types.ts`; YouTube placeholder string in `worker.ts` | unit (state transitions + retry taxonomy) + integration (mocked vendors) | asserting exact LLM output text; over-mocking the consumer's own logic |
 | #2 | List/read endpoints return only the caller's rows; a not-yours single-resource fetch → 404, never 403 | "logged in ⇒ only my data" — verify the query is user-scoped, not merely authenticated | `api/links` query shape; RLS `SELECT` policy; `api-conventions.md` 404 rule | integration (two users, real RLS) | relying on RLS silent-empty result as the assertion oracle |
 | #3 | Forged webhook (bad shared secret) → 401; `user_id` resolved only from the trusted `telegram_id → user_id` mapping, never from the payload | "valid JSON ⇒ trusted sender"; honoring a payload-claimed user id | webhook secret-token check; the trusted mapping lookup; admin-client surface | integration (forged vs authentic request) | testing that the Supabase RLS engine works (vendor); skipping the secret-check branch |
 | #4 | Bad credentials → error redirect; success → session + redirect; protected route while anonymous → redirect to sign-in | "auth works ⇒ my endpoints work" — test your handlers + middleware, not `@supabase/ssr` | signin/signup/signout handlers; middleware `PROTECTED_ROUTES` | integration | snapshotting auth UI markup; testing the library's session restore |
@@ -76,7 +76,7 @@ orchestrator updates Status as artifacts appear on disk.
 
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
-| 1 | Bootstrap + pipeline unit logic | Stand up the runner; prove URL validation, consumer retry taxonomy, and describe fallback in isolation | #6, #1 (partial) | unit | researched | context/changes/testing-pipeline-units/ |
+| 1 | Bootstrap + pipeline unit logic | Stand up the runner; prove URL validation, consumer retry taxonomy, and vendor null-vs-throw classification in isolation | #6, #1 (partial) | unit | complete | context/changes/testing-pipeline-units/ |
 | 2 | Capture + processing integration | Webhook trust boundary, enqueue parity, consumer reaches a terminal state and never sticks (vendors mocked) | #1, #3, #5 | integration | not started | — |
 | 3 | API authorization + auth | Links API user-scoping (404-not-403), auth/registration handler behavior | #2, #4 | integration | not started | — |
 | 4 | E2E critical path + CI gate | One Playwright flow signup → capture → link visible (Realtime JWT); wire the CI test gate | #4 (e2e), #1 (visible state) | e2e + CI gate | not started | — |
@@ -123,7 +123,43 @@ the relevant rollout phase ships; before that, it reads "TBD — see §3 Phase <
 
 ### 6.1 Adding a unit test
 
-- TBD — see §3 Phase 1 (URL validation + consumer retry taxonomy + describe fallback pattern).
+**Runner:** Vitest 4.x (`bun run test` / `bun run test:watch`). Config: `vitest.config.ts` at repo root, `environment: "node"`, colocated `src/**/*.test.ts` glob.
+
+**Colocate** test files next to source: `src/lib/foo.ts` → `src/lib/foo.test.ts`.
+
+**Pure functions** (no I/O, no env): import and assert directly — no mocks needed.
+```ts
+import { describe, it, expect } from "vitest";
+import { extractFirstUrl } from "./url";
+
+describe("extractFirstUrl", () => {
+  it("returns null when no URL in text", () => {
+    expect(extractFirstUrl("no url here")).toBeNull();
+  });
+});
+```
+
+**Vendor/HTTP classifiers** (`scrapeFirecrawl`, `describeContent`): mock only the three boundaries — HTTP (`vi.stubGlobal("fetch", …)`), env (`vi.mock("astro:env/server", …)`), LLM key (`vi.mock("@/lib/llm-key", …)`). Never mock internal modules.
+
+```ts
+vi.mock("astro:env/server", () => ({
+  get FIRECRAWL_API_KEY() { return mockFirecrawlApiKey; },
+  USE_FIRECRAWL_MOCK: "false",
+  USE_LLM_MOCK: "false",
+}));
+
+vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true, status: 200, json: () => Promise.resolve(body) }));
+```
+
+Use `beforeEach` to reset mutable mock state; `afterEach(() => vi.unstubAllGlobals())` to undo `stubGlobal`. Use `vi.mocked(fn).mockReturnValue(...)` for `vi.fn()`-based mocks.
+
+**Null-vs-throw contract** (the load-bearing seam): `null` = definitive miss (no retry), `throw` = transient (queue retries). Assert both sides for every vendor branch:
+```ts
+await expect(scrapeFirecrawl(url)).rejects.toThrow(/transient/i); // 429/500/network
+expect(await scrapeFirecrawl(url)).toBeNull();                     // 402/404/no-key
+```
+
+**`astro:env/server` resolution**: `vi.mock` factory approach works without `resolve.alias`. The factory is hoisted above imports and intercepts the virtual module before Node tries to resolve it.
 
 ### 6.2 Adding an integration test
 
