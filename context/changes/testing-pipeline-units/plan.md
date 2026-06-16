@@ -452,11 +452,11 @@ None. Net-new test infrastructure; no existing tests to migrate.
 
 #### Automated
 
-- [x] 4.1 CI workflow includes test step
-- [x] 4.2 Full local gate passes
-- [x] 4.3 Test-plan no longer contains "fallback marker present"
+- [x] 4.1 CI workflow includes test step — f88d415
+- [x] 4.2 Full local gate passes — f88d415
+- [x] 4.3 Test-plan no longer contains "fallback marker present" — f88d415
 
 #### Manual
 
-- [x] 4.4 PR shows test job executing + gating in GitHub Actions
-- [x] 4.5 Edited test-plan sections accurate; Phase 1 reads `complete`
+- [x] 4.4 PR shows test job executing + gating in GitHub Actions — f88d415
+- [x] 4.5 Edited test-plan sections accurate; Phase 1 reads `complete` — f88d415
