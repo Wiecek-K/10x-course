@@ -415,22 +415,22 @@ None. Net-new test infrastructure; no existing tests to migrate.
 
 #### Automated
 
-- [x] 1.1 Vitest installed
-- [x] 1.2 Smoke test passes (`bun run test`)
-- [x] 1.3 Type check passes
-- [x] 1.4 Format passes
+- [x] 1.1 Vitest installed — 4ddd1e2
+- [x] 1.2 Smoke test passes (`bun run test`) — 4ddd1e2
+- [x] 1.3 Type check passes — 4ddd1e2
+- [x] 1.4 Format passes — 4ddd1e2
 
 #### Manual
 
-- [x] 1.5 `test:watch` reacts to file save
-- [x] 1.6 Failed assertion makes test exit non-zero
+- [x] 1.5 `test:watch` reacts to file save — 4ddd1e2
+- [x] 1.6 Failed assertion makes test exit non-zero — 4ddd1e2
 
 ### Phase 2: Pure-function unit tests
 
 #### Automated
 
-- [ ] 2.1 Pure-function tests pass
-- [ ] 2.2 Lint/format clean on new files
+- [x] 2.1 Pure-function tests pass
+- [x] 2.2 Lint/format clean on new files
 
 #### Manual
 
