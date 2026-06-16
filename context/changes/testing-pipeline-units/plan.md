@@ -429,20 +429,20 @@ None. Net-new test infrastructure; no existing tests to migrate.
 
 #### Automated
 
-- [x] 2.1 Pure-function tests pass
-- [x] 2.2 Lint/format clean on new files
+- [x] 2.1 Pure-function tests pass — 8c2ee3c
+- [x] 2.2 Lint/format clean on new files — 8c2ee3c
 
 #### Manual
 
-- [ ] 2.3 Edge case (e.g. `music.youtube.com` → false) matches intended behavior
+- [x] 2.3 Edge case (e.g. `music.youtube.com` → false) matches intended behavior — 8c2ee3c
 
 ### Phase 3: Vendor null-vs-throw classification tests
 
 #### Automated
 
-- [ ] 3.1 Vendor classification tests pass
-- [ ] 3.2 No internal modules mocked beyond HTTP/env/key boundary
-- [ ] 3.3 Lint/format clean
+- [x] 3.1 Vendor classification tests pass
+- [x] 3.2 No internal modules mocked beyond HTTP/env/key boundary
+- [x] 3.3 Lint/format clean
 
 #### Manual
 
