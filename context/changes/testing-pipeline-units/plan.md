@@ -366,6 +366,13 @@ replace the TBD with the established pattern (colocated `*.test.ts`, Vitest,
 **Implementation Note**: Final phase — confirm CI green on a real PR before
 closing the change.
 
+#### Addendum (impl-review 2026-06-16): unplanned CLAUDE.md Git Workflow rule
+
+Commit `f88d415` also added a "Git Workflow" section to `CLAUDE.md` ("Never
+commit directly to `main` without explicit user confirmation"). This was a
+separate user request, not part of the test-infra plan; recorded here so the
+plan fully describes the committed diff. Benign, additive — no rollback impact.
+
 ---
 
 ## Testing Strategy

@@ -11,7 +11,7 @@ vi.mock("astro:env/server", () => ({
   USE_LLM_MOCK: "false",
 }));
 
-import { scrapeFirecrawl } from "./firecrawl";
+import { scrapeFirecrawl } from "@/lib/services/firecrawl";
 
 function stubFetch(status: number, body: unknown = {}): void {
   vi.stubGlobal(

@@ -10,7 +10,7 @@ vi.mock("@/lib/llm-key", () => ({
   getLlmApiKey: vi.fn(),
 }));
 
-import { describeContent } from "./describe";
+import { describeContent } from "@/lib/services/describe";
 
 function stubFetch(status: number, body: unknown = {}): void {
   vi.stubGlobal(
@@ -72,6 +72,11 @@ describe("describeContent", () => {
     expect(await describeContent("some content", "user-1")).toBeNull();
   });
 
+  it("returns null when choices array is empty", async () => {
+    stubFetch(200, { choices: [] });
+    expect(await describeContent("some content", "user-1")).toBeNull();
+  });
+
   it("returns description string on success", async () => {
     stubFetch(200, openAiBody(JSON.stringify({ description: "A great article about testing" })));
     expect(await describeContent("some content", "user-1")).toBe("A great article about testing");
@@ -82,7 +87,7 @@ describe("describeContent", () => {
     expect(await describeContent("some content", "user-1")).toBeNull();
   });
 
-  it("throws on malformed JSON in response content (transient classification)", async () => {
+  it("throws (uncaught) on malformed JSON in response content", async () => {
     stubFetch(200, openAiBody("not-valid-json"));
     await expect(describeContent("some content", "user-1")).rejects.toThrow();
   });

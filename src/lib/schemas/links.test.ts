@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { CreateLinkSchema, ListLinksQuerySchema } from "./links";
+import { CreateLinkSchema, ListLinksQuerySchema } from "@/lib/schemas/links";
 
 describe("CreateLinkSchema", () => {
   it("accepts a valid https URL", () => {

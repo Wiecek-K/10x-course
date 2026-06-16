@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isYouTubeUrl } from "./youtube";
+import { isYouTubeUrl } from "@/lib/services/youtube";
 
 describe("isYouTubeUrl", () => {
   describe("returns true for", () => {

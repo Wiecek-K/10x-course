@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractFirstUrl } from "./url";
+import { extractFirstUrl } from "@/lib/url";
 
 describe("extractFirstUrl", () => {
   it("returns a plain https URL", () => {
