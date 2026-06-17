@@ -43,6 +43,12 @@ export default {
 
     if (isYouTubeUrl(url)) {
       const meta = await fetchYouTubeMetadata(url);
+      if (!meta) {
+        // Best-effort miss: oEmbed returned nothing usable (403/404/network/bad JSON).
+        // Stable tag `youtube_oembed_miss` so the degradation is countable in Workers Logs / Logpush.
+        // eslint-disable-next-line no-console -- best-effort oEmbed miss; countable signal for Workers observability
+        console.warn(`youtube_oembed_miss linkId=${msg.body.linkId} url=${url}`);
+      }
       const micro_description = meta
         ? `▶ ${meta.title} — ${meta.channel} · transcript coming soon`
         : "YouTube video — transcript coming soon.";
