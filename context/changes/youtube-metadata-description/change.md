@@ -1,7 +1,7 @@
 ---
 change_id: youtube-metadata-description
 title: YouTube interim description from URL metadata (title + channel)
-status: implementing
+status: implemented
 created: 2026-06-16
 updated: 2026-06-17
 archived_at: null
