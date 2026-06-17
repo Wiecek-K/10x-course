@@ -202,12 +202,12 @@ Import `fetchYouTubeMetadata` alongside the existing `isYouTubeUrl` import (`src
 
 #### Automated
 
-- [ ] 2.1 Type checking + lint pass: `bun run lint`
-- [ ] 2.2 Build succeeds: `bun run build`
-- [ ] 2.3 Existing unit suite still green: `bun run test`
+- [x] 2.1 Type checking + lint pass: `bun run lint`
+- [x] 2.2 Build succeeds: `bun run build`
+- [x] 2.3 Existing unit suite still green: `bun run test`
 
 #### Manual
 
-- [ ] 2.4 Public `/watch` link via bot → inbox shows `▶ <title> — <channel> · transcript coming soon`
-- [ ] 2.5 `youtu.be` + `/shorts/` links → same metadata format
-- [ ] 2.6 Private/deleted link → static fallback placeholder, status `done` (not `failed`)
+- [x] 2.4 Public `/watch` link via bot → inbox shows `▶ <title> — <channel> · transcript coming soon`
+- [x] 2.5 `youtu.be` + `/shorts/` links → same metadata format
+- [x] 2.6 Private/deleted link → static fallback placeholder, status `done` (not `failed`)
