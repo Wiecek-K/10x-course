@@ -1,15 +1,12 @@
 import { cn } from "@/lib/utils";
-import { useLinks } from "@/components/hooks/useLinks";
 import type { Link } from "@/types";
+import type { useLinkActions } from "@/components/hooks/useLinkActions";
 
 interface Props {
-  initialLinks: Link[];
-  userId: string;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
+  links: Link[];
+  actions: ReturnType<typeof useLinkActions>;
 }
 
-// Defense-in-depth: only ever bind http(s) URLs to href, regardless of writer.
 function safeHref(url: string): string {
   return url.startsWith("http://") || url.startsWith("https://") ? url : "#";
 }
@@ -26,9 +23,7 @@ function formatRelativeTime(dateStr: string): string {
   return `${days}d ago`;
 }
 
-export default function InboxList({ initialLinks, userId, supabaseUrl, supabaseAnonKey }: Props) {
-  const links = useLinks(initialLinks, userId, supabaseUrl, supabaseAnonKey);
-
+export default function InboxList({ links, actions: _actions }: Props) {
   if (links.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">

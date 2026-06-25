@@ -470,28 +470,28 @@ One additive, nullable column (`note`) — no backfill, no data migration. Exist
 
 #### Automated
 
-- [x] 1.1 Migration applies cleanly against local Supabase
-- [x] 1.2 Type regen produces `note`; `bun run build` typechecks
-- [x] 1.3 Lint passes: `bun run lint`
-- [x] 1.4 Unit tests pass: `bun run test`
-- [x] 1.5 Format check passes: `bun run format:check`
+- [x] 1.1 Migration applies cleanly against local Supabase — 826f70d
+- [x] 1.2 Type regen produces `note`; `bun run build` typechecks — 826f70d
+- [x] 1.3 Lint passes: `bun run lint` — 826f70d
+- [x] 1.4 Unit tests pass: `bun run test` — 826f70d
+- [x] 1.5 Format check passes: `bun run format:check` — 826f70d
 
 #### Manual
 
-- [x] 1.6 PATCH `{in_library:true}` returns 200 + updated row
-- [x] 1.7 PATCH `{visited:true}` sets `last_visited` to ~now
-- [x] 1.8 PATCH/DELETE on non-existent or other-user id returns 404 (not 403)
-- [x] 1.9 DELETE on own id returns 204 and row is gone
-- [x] 1.10 Unauthenticated request returns 401
+- [x] 1.6 PATCH `{in_library:true}` returns 200 + updated row — 826f70d
+- [x] 1.7 PATCH `{visited:true}` sets `last_visited` to ~now — 826f70d
+- [x] 1.8 PATCH/DELETE on non-existent or other-user id returns 404 (not 403) — 826f70d
+- [x] 1.9 DELETE on own id returns 204 and row is gone — 826f70d
+- [x] 1.10 Unauthenticated request returns 401 — 826f70d
 
 ### Phase 2: Client State & Plumbing
 
 #### Automated
 
-- [ ] 2.1 Typecheck passes: `bun run build`
-- [ ] 2.2 Lint passes: `bun run lint`
-- [ ] 2.3 Existing tests still pass: `bun run test`
-- [ ] 2.4 Format check passes: `bun run format:check`
+- [x] 2.1 Typecheck passes: `bun run build`
+- [x] 2.2 Lint passes: `bun run lint`
+- [x] 2.3 Existing tests still pass: `bun run test`
+- [x] 2.4 Format check passes: `bun run format:check`
 
 #### Manual
 
