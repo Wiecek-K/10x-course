@@ -1,7 +1,7 @@
 ---
 change_id: link-closure-flow
 title: Link closure flow
-status: preparing
+status: implementing
 created: 2026-06-25
 updated: 2026-06-25
 archived_at: null
