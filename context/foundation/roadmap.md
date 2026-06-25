@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-06-16
+updated: 2026-06-25
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -147,7 +147,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
   - Źródło metadanych: YouTube oEmbed (`https://www.youtube.com/oembed?url=<url>&format=json` → `title`, `author_name`; keyless, JSON, bez parsowania HTML) vs Open Graph `<meta>` tagi ze strony watch. Rozstrzygnięcie w `/10x-plan`. Block: no.
   - Format opisu (np. `"{tytuł} — {kanał}. Pełna transkrypcja w przygotowaniu."`) — do ustalenia w `/10x-plan`. Block: no.
 - **Risk:** mały slice; jedyny seam to gałąź YouTube w consumerze. Współdzieli technikę OG/metadata z parkowanym `music.youtube.com`. Nie dotyka klasyfikatora `isYouTubeUrl` (`music.youtube.com → false` pozostaje poprawne).
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Closure flow + per-link manual edit
 
@@ -260,4 +260,5 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **F-02: (foundation) kolejka `tabzero-link-processing` podpięta w `wrangler.jsonc`; helper producer importowalny z API; minimalny consumer Worker który ack'uje jobs (jeszcze nic nie robi). Brak scrapingu, brak LLM calls — to wszystko jest w S-02.** — Archived 2026-06-01 → `context/archive/2026-05-29-link-processing-queue/`. Lesson: —.
 - **S-01: użytkownik wysyła URL do bota w komunikatorze; bot odpowiada potwierdzeniem w ≤2s; link pojawia się w inboxie web app (jako URL, opis przyjdzie z S-02).** — Archived 2026-06-06 → `context/archive/2026-06-03-bot-capture-to-inbox/`. Lesson: —.
 - **Dev-tooling: katalog wyjściowy Playwright MCP (TAB-15)** — Archived 2026-06-07 → `context/archive/2026-06-05-playwright-mcp-output-dir/`. Lesson: —.
+- **S-02a: dla linków YouTube (`youtube.com/watch`, `/shorts/`, `youtu.be`) system zapisuje micro-opis złożony z tytułu filmu + nazwy kanału autora pobranych z metadanych URL (bez Firecrawl, bez LLM), zachowując placeholder informujący, że pełna transkrypcja jest w przygotowaniu. Zastępuje statyczny `"YouTube video — transcript coming soon."` bogatszym, wciąż lekkim opisem.** — Archived 2026-06-25 → `context/archive/2026-06-16-youtube-metadata-description/`. Lesson: serverless egress IPs get 403'd by consumer endpoints — verify happy path from deployed Worker.
 - **S-02: zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie** — Archived 2026-06-09 → `context/archive/2026-06-07-auto-description-pipeline/`. Lesson: —.
