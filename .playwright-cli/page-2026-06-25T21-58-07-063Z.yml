@@ -1,0 +1,42 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: test@example.com
+      - generic [ref=e6]:
+        - link "Dashboard" [ref=e7] [cursor=pointer]:
+          - /url: /dashboard
+        - button "Sign out" [ref=e9]
+    - generic [ref=e10]:
+      - heading "10x Astro Starter" [level=1] [ref=e11]
+      - paragraph [ref=e12]: A production-ready starter with authentication, modern tooling, and a cosmic developer experience.
+      - generic [ref=e13]:
+        - link "Sign In" [ref=e14] [cursor=pointer]:
+          - /url: /auth/signin
+        - link "Sign Up" [ref=e15] [cursor=pointer]:
+          - /url: /auth/signup
+    - generic [ref=e16]:
+      - generic [ref=e17]:
+        - img [ref=e18]
+        - heading "Authentication Ready" [level=3] [ref=e21]
+        - paragraph [ref=e22]: Built-in Supabase auth with sign in, sign up, and protected routes out of the box.
+      - generic [ref=e23]:
+        - img [ref=e24]
+        - heading "Modern Stack" [level=3] [ref=e28]
+        - paragraph [ref=e29]: Astro 5, React 19, Tailwind 4, and TypeScript — the latest tools, ready to go.
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - heading "Developer Experience" [level=3] [ref=e34]
+        - paragraph [ref=e35]: ESLint, Prettier, and pre-commit hooks keep your codebase clean from day one.
+  - generic [ref=e38]:
+    - button "Menu" [ref=e39]:
+      - img [ref=e41]
+      - generic: Menu
+    - button "Inspect" [ref=e45]:
+      - img [ref=e47]
+      - generic: Inspect
+    - button "Audit" [ref=e49]:
+      - img [ref=e51]
+      - generic: Audit
+    - button "Settings" [ref=e54]:
+      - img [ref=e56]
+      - generic: Settings

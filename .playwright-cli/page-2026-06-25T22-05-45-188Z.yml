@@ -1,0 +1,96 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: tabzero
+      - button "T test@example.com" [ref=e8]:
+        - generic [ref=e9]: T
+        - generic [ref=e10]: test@example.com
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - heading "Inbox" [level=2] [ref=e37]
+        - list [ref=e38]:
+          - listitem [ref=e61]:
+            - generic [ref=e62]:
+              - link "https://blog.cloudflare.com/workers-ai/" [ref=e63] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/workers-ai/
+              - paragraph [ref=e64]: Introduces Workers AI, Cloudflare's serverless platform enabling GPU-powered AI inference with minimal setup, supporting popular models for tasks like text generation and image classification. Emphasizes accessibility and privacy, allowing developers to run AI models seamlessly on Cloudflare's infrastructure or via REST API.
+              - generic [ref=e65]:
+                - generic [ref=e66]: 16d ago
+                - generic [ref=e67]: opened — awaiting action
+            - generic [ref=e68]:
+              - button "Keep" [ref=e69]
+              - button "Done" [ref=e70]
+              - button "Discard" [ref=e71]
+              - button "Edit" [ref=e72]
+          - listitem [ref=e73]:
+            - generic [ref=e74]:
+              - link "https://thisdomaindoesnotexist12345xyz.xyz/" [ref=e75] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345xyz.xyz/
+              - generic [ref=e77]: 16d ago
+            - generic [ref=e78]:
+              - generic [ref=e79]: failed
+              - button "Keep" [ref=e80]
+              - button "Done" [ref=e81]
+              - button "Discard" [ref=e82]
+              - button "Edit" [ref=e83]
+          - listitem [ref=e84]:
+            - generic [ref=e85]:
+              - link "https://thisdomaindoesnotexist12345678.xyz/" [ref=e86] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345678.xyz/
+              - paragraph [ref=e87]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e89]: 16d ago
+            - generic [ref=e90]:
+              - button "Keep" [ref=e91]
+              - button "Done" [ref=e92]
+              - button "Discard" [ref=e93]
+              - button "Edit" [ref=e94]
+          - listitem [ref=e95]:
+            - generic [ref=e96]:
+              - link "https://blog.cloudflare.com/workers-ai/?t=1780963339082" [ref=e97] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/workers-ai/?t=1780963339082
+              - paragraph [ref=e98]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e100]: 16d ago
+            - generic [ref=e101]:
+              - button "Keep" [ref=e102]
+              - button "Done" [ref=e103]
+              - button "Discard" [ref=e104]
+              - button "Edit" [ref=e105]
+          - listitem [ref=e106]:
+            - generic [ref=e107]:
+              - link "https://thisdomaindoesnotexist12345678.xyz/" [ref=e108] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345678.xyz/
+              - paragraph [ref=e109]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e111]: 16d ago
+            - generic [ref=e112]:
+              - button "Keep" [ref=e113]
+              - button "Done" [ref=e114]
+              - button "Discard" [ref=e115]
+              - button "Edit" [ref=e116]
+      - generic [ref=e117]:
+        - heading "Library" [level=2] [ref=e118]
+        - list [ref=e125]:
+          - listitem [ref=e126]:
+            - generic [ref=e127]:
+              - link "https://blog.cloudflare.com/the-cloudflare-series-a/?t=1780965350798" [ref=e128] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/the-cloudflare-series-a/?t=1780965350798
+              - paragraph [ref=e129]: Displays a 404 error message indicating that the requested page is not found, suggesting possible reasons such as an outdated link or incorrect address entry, while offering an AI-powered search feature to assist users in finding relevant content.
+      - region "Notifications alt+T":
+        - list:
+          - listitem [ref=e132]:
+            - generic [ref=e134]: Link consumed
+            - button "Undo" [ref=e135] [cursor=pointer]
+  - generic [ref=e13]:
+    - button "Menu" [ref=e14]:
+      - img [ref=e16]
+      - generic: Menu
+    - button "Inspect" [ref=e20]:
+      - img [ref=e22]
+      - generic: Inspect
+    - button "Audit" [ref=e24]:
+      - generic [ref=e25]:
+        - img [ref=e26]
+        - img [ref=e136]
+      - generic: Audit
+    - button "Settings" [ref=e29]:
+      - img [ref=e31]
+      - generic: Settings

@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { useLinks } from "@/components/hooks/useLinks";
 import { useLinkActions } from "@/components/hooks/useLinkActions";
 import InboxList from "@/components/InboxList";
+import EditLinkDialog from "@/components/EditLinkDialog";
+import { Toaster } from "@/components/ui/sonner";
 import type { Link } from "@/types";
 
 interface Props {
@@ -13,6 +16,7 @@ interface Props {
 export default function LinksDashboard({ initialLinks, userId, supabaseUrl, supabaseAnonKey }: Props) {
   const { links, updateLink, removeLink, restoreLink } = useLinks(initialLinks, userId, supabaseUrl, supabaseAnonKey);
   const actions = useLinkActions({ links, updateLink, removeLink, restoreLink });
+  const [editingLink, setEditingLink] = useState<Link | null>(null);
 
   const inboxLinks = links.filter((l) => !l.in_library);
   const libraryLinks = links.filter((l) => l.in_library);
@@ -21,7 +25,7 @@ export default function LinksDashboard({ initialLinks, userId, supabaseUrl, supa
     <div className="space-y-6">
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="mb-4 text-lg font-semibold text-white">Inbox</h2>
-        <InboxList links={inboxLinks} actions={actions} />
+        <InboxList links={inboxLinks} actions={actions} onEdit={setEditingLink} />
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -55,6 +59,16 @@ export default function LinksDashboard({ initialLinks, userId, supabaseUrl, supa
           </ul>
         )}
       </div>
+
+      <EditLinkDialog
+        link={editingLink}
+        open={editingLink !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditingLink(null);
+        }}
+        onSave={actions.editLink}
+      />
+      <Toaster />
     </div>
   );
 }

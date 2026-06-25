@@ -1,0 +1,93 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: tabzero
+      - button [ref=e122]:
+        - generic [ref=e9]: T
+        - generic [ref=e10]: test@example.com
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading [level=2] [ref=e123]: Inbox
+        - list [ref=e15]:
+          - listitem [ref=e16]:
+            - generic [ref=e17]:
+              - link [ref=e124] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345xyz.xyz/
+                - text: https://thisdomaindoesnotexist12345xyz.xyz/
+              - generic [ref=e20]: 16d ago
+            - generic [ref=e21]:
+              - generic [ref=e22]: failed
+              - button [ref=e125]: Keep
+              - button [ref=e126]: Done
+              - button [ref=e127]: Discard
+              - button [ref=e128]: Edit
+          - listitem [ref=e27]:
+            - generic [ref=e28]:
+              - link [ref=e129] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345678.xyz/
+                - text: https://thisdomaindoesnotexist12345678.xyz/
+              - paragraph [ref=e30]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e31]:
+                - generic [ref=e32]: 16d ago
+                - generic [ref=e33]: opened — awaiting action
+            - generic [ref=e34]:
+              - button [ref=e130]: Keep
+              - button [ref=e131]: Done
+              - button [ref=e132]: Discard
+              - button [ref=e133]: Edit
+          - listitem [ref=e39]:
+            - generic [ref=e40]:
+              - link [ref=e134] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/workers-ai/?t=1780963339082
+                - text: https://blog.cloudflare.com/workers-ai/?t=1780963339082
+              - paragraph [ref=e42]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e44]: 16d ago
+            - generic [ref=e45]:
+              - button [ref=e135]: Keep
+              - button [ref=e136]: Done
+              - button [ref=e137]: Discard
+              - button [ref=e138]: Edit
+          - listitem [ref=e50]:
+            - generic [ref=e51]:
+              - link [ref=e139] [cursor=pointer]:
+                - /url: https://thisdomaindoesnotexist12345678.xyz/
+                - text: https://thisdomaindoesnotexist12345678.xyz/
+              - paragraph [ref=e53]: Introduces Workers AI, a serverless AI inference platform that leverages Cloudflare's global GPU network, allowing developers to run popular open source models with minimal setup. Highlights its accessibility, privacy focus, and seamless integration with existing developer tools for various AI tasks like text generation and image classification.
+              - generic [ref=e55]: 16d ago
+            - generic [ref=e56]:
+              - button [ref=e140]: Keep
+              - button [ref=e141]: Done
+              - button [ref=e142]: Discard
+              - button [ref=e143]: Edit
+      - generic [ref=e61]:
+        - heading [level=2] [ref=e144]: Library
+        - list [ref=e63]:
+          - listitem [ref=e64]:
+            - generic [ref=e65]:
+              - link [ref=e145] [cursor=pointer]:
+                - /url: https://blog.cloudflare.com/the-cloudflare-series-a/?t=1780965350798
+                - text: https://blog.cloudflare.com/the-cloudflare-series-a/?t=1780965350798
+              - paragraph [ref=e67]: Displays a 404 error message indicating that the requested page is not found, suggesting possible reasons such as an outdated link or incorrect address entry, while offering an AI-powered search feature to assist users in finding relevant content.
+      - region "Notifications alt+T"
+  - generic [ref=e70]:
+    - button [ref=e94]:
+      - img [ref=e73]
+      - generic: Menu
+    - button [ref=e95]:
+      - img [ref=e79]
+      - generic: Inspect
+    - button [ref=e96]:
+      - generic [ref=e82]:
+        - img [ref=e83]
+        - img [ref=e146]
+      - generic: Audit
+    - button [ref=e97]:
+      - img [ref=e91]
+      - generic: Settings
+  - dialog "Edit link" [ref=e99]:
+    - generic [ref=e100]:
+      - heading "Edit link" [level=2] [ref=e101]
+      - paragraph [ref=e102]: Update the link details below.
+    - button "Close" [ref=e116]:
+      - img
+      - generic [ref=e117]: Close
