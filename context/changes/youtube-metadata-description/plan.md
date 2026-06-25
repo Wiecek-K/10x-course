@@ -167,6 +167,43 @@ Import `fetchYouTubeMetadata` alongside the existing `isYouTubeUrl` import (`src
 
 ---
 
+## Phase 3: oEmbed-miss observability log (discovered during implementation)
+
+### Overview
+
+Not in the original plan. Production testing surfaced frequent oEmbed `403`s from the deployed
+Worker's datacenter IP (the fallback path firing far more than expected). Added a stable, countable
+log tag on the miss path so the real degradation rate is queryable in Workers Logs / Logpush.
+
+### Changes Required:
+
+#### 1. Stable miss-log tag
+
+**File**: `src/worker.ts` (the `if (isYouTubeUrl(url))` branch)
+
+**Intent**: When `fetchYouTubeMetadata` returns `null`, emit `console.warn` with the stable prefix
+`youtube_oembed_miss` plus `linkId` and `url`, behind the project's `eslint-disable no-console`
+convention. Description write + `ack()` are unchanged; this is observability only, not control flow.
+
+```ts
+if (!meta) {
+  // eslint-disable-next-line no-console -- best-effort oEmbed miss; countable signal for Workers observability
+  console.warn(`youtube_oembed_miss linkId=${msg.body.linkId} url=${url}`);
+}
+```
+
+### Success Criteria:
+
+#### Automated
+
+- [x] 3.1 Lint passes with the eslint-disable comment: `bun run lint` — 2543743
+
+#### Manual
+
+- [x] 3.2 Cloudflare Workers observability enabled; tag greppable in Workers Logs — 2543743
+
+---
+
 ## Testing Strategy
 
 ### Unit Tests:

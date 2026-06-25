@@ -198,3 +198,15 @@ This project's development setup (`wrangler dev`) connects to the **remote** Sup
 - The `SUPABASE_URL` / `SUPABASE_KEY` / `SUPABASE_SERVICE_ROLE_KEY` in `.dev.vars` point at remote, so any queue consumer, bot webhook, or admin-client path runs against the real schema.
 
 **Applies to**: every phase that adds a migration — verify it lands on remote before testing locally.
+
+---
+
+## Serverless egress IPs get 403'd by consumer endpoints (YouTube oEmbed/scrape) — test the happy path from the deployed Worker, not just locally
+
+**Context**: A Cloudflare Worker (queue consumer, cron, webhook) calling a third-party _consumer_ endpoint that fingerprints/ratelimits by client IP — YouTube oEmbed (`youtube.com/oembed`), site scrapers, public APIs without a key. Concretely in S-02a: `fetchYouTubeMetadata` (`src/lib/services/youtube.ts:33`).
+
+**Problem**: The call works in local dev (residential IP) but the deployed Worker runs from a datacenter IP, which YouTube oEmbed blocks with `403 Forbidden` (confirmed in production). The code is correct and degrades cleanly — `403 → null → static-placeholder fallback`, link still reaches `done` — so nothing fails loudly and unit tests (mocked `fetch`) stay green. But the _feature's value_ (the rich `▶ title — channel` description) is silently never delivered; users see the fallback almost every time. A passing test suite and a clean local manual check both hide it, because neither exercises the deployed egress IP.
+
+**Rule**: When a Worker calls a consumer endpoint that may discriminate by IP, treat "works locally" as no evidence the happy path works in prod. Verify the happy path from the _deployed_ Worker, and ship a stable, countable miss log (e.g. `youtube_oembed_miss`) so the real hit-rate is observable in Workers Logs / Logpush rather than assumed. If misses dominate, the feature isn't delivering — change the source (keyed API, transcript provider, proxy), don't just keep the fallback.
+
+**Applies to**: S-02a YouTube oEmbed; any future Worker→third-party consumer-endpoint call (scrape fallbacks, keyless public APIs, parked `music.youtube.com` reuse).
