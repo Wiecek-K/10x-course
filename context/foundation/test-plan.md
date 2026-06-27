@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-15 (Phase 1 change opened: testing-pipeline-units)
+> Last updated: 2026-06-27 (Phase 2 change opened: testing-capture-processing-integration)
 
 ## 1. Strategy
 
@@ -61,11 +61,11 @@ is folded into #3's "must challenge" and the §7 boundary on testing vendor inte
 
 | Risk | What would prove protection | Must challenge | Context `/10x-research` must ground | Likely cheapest layer | Anti-pattern to avoid |
 |------|-----------------------------|----------------|--------------------------------------|-----------------------|-----------------------|
-| #1 | Scrape miss → terminal `failed` state + visual flag (never stuck); any error → link preserved, never lost; LLM failure (`null`) → terminal `failed`, link preserved, never stuck; the only fallback string is the YouTube placeholder | "`ack()` after a failed terminal write = success" — a stuck row still looks acked | consumer state machine in `worker.ts`; status enum in `src/types.ts`; YouTube placeholder string in `worker.ts` | unit (state transitions + retry taxonomy) + integration (mocked vendors) | asserting exact LLM output text; over-mocking the consumer's own logic |
+| #1 | Vendor `null` (definitive miss) → terminal `failed` + `ack()`, link preserved, never stuck; full success → `done` + `ack()`; YouTube branch → `done` with the placeholder fallback string. (TESTABLE — these branches exist.) | The real stuck-state gap (research 2026-06-27): a **transient throw → `retry()` writes NO status**; after `max_retries` (3) the message hits the DLQ and **nothing ever writes `failed`** → row stuck in `scraping`/`describing` forever — **no DLQ consumer / reaper exists**. Do NOT challenge "ack after failed" — that path is correct. The integration test asserts the `null→failed→ack` branches and **documents** the transient-exhaust gap; it cannot assert self-heal (no recovery code to test). | consumer state machine `worker.ts:8-90`; status enum `src/types.ts:20`; null-vs-throw taxonomy `firecrawl.ts:32-40` / `describe.ts:72-83`; YouTube fallback `worker.ts:52-54` | integration (mocked vendors + mocked admin client; assert ordered `update` calls + ack/retry spies) | asserting exact LLM output text; over-mocking the consumer's own logic; writing a multi-message-batch test (config-guarded `max_batch_size: 1`) |
 | #2 | List/read endpoints return only the caller's rows; a not-yours single-resource fetch → 404, never 403 | "logged in ⇒ only my data" — verify the query is user-scoped, not merely authenticated | `api/links` query shape; RLS `SELECT` policy; `api-conventions.md` 404 rule | integration (two users, real RLS) | relying on RLS silent-empty result as the assertion oracle |
-| #3 | Forged webhook (bad shared secret) → 401; `user_id` resolved only from the trusted `telegram_id → user_id` mapping, never from the payload | "valid JSON ⇒ trusted sender"; honoring a payload-claimed user id | webhook secret-token check; the trusted mapping lookup; admin-client surface | integration (forged vs authentic request) | testing that the Supabase RLS engine works (vendor); skipping the secret-check branch |
+| #3 | Forged webhook (bad shared secret) → 401; `user_id` resolved only from the trusted `telegram_id → user_id` mapping, never from the payload. **REGRESSION GUARD** — research 2026-06-27 verified the safeguard is present (constant-time secret check `webhook.ts:19-24`, fails-closed; `user_id` from `telegram_links` `:105-131`; payload type has no `user_id` field). Test protects against future erosion, not a live bug. | "valid JSON ⇒ trusted sender"; honoring a payload-claimed user id | webhook secret-token check; the trusted mapping lookup; admin-client surface | integration (forged vs authentic request; mock admin client + `astro:env/server` + `telegram.sendMessage` + `enqueueLink`) | testing that the Supabase RLS engine works (vendor — path bypasses RLS by design); skipping the secret-check branch |
 | #4 | Bad credentials → error redirect; success → session + redirect; protected route while anonymous → redirect to sign-in | "auth works ⇒ my endpoints work" — test your handlers + middleware, not `@supabase/ssr` | signin/signup/signout handlers; middleware `PROTECTED_ROUTES` | integration | snapshotting auth UI markup; testing the library's session restore |
-| #5 | A link captured through any channel ends up enqueued for processing | "insert row = job done" — the endpoint does more than insert (it enqueues) | the `enqueueLink` call site; every capture write path | integration | testing only the happy desktop path and ignoring bot/extension parity |
+| #5 | A link captured through any channel ends up enqueued for processing. **REGRESSION GUARD** — research 2026-06-27 verified parity holds today (both `POST /api/links` `index.ts:30-47` and bot webhook `webhook.ts:129-147` insert-then-enqueue; no insert-without-enqueue path exists). Test protects against a future capture path (S-05 extension) or a dropped enqueue line. | "insert row = job done" — the endpoint does more than insert (it enqueues) | the `enqueueLink` call site; every capture write path | integration (assert `LINK_QUEUE.send` spy fired with `{type:"describe",v:1,linkId,userId}` after insert, via `vi.mock("cloudflare:workers")`) | testing only the happy desktop path and ignoring bot/extension parity |
 | #6 | Malformed/unsupported URL handled cleanly; definitive miss (`null`) → `failed` with no retry; transient error (throw) → retry | "pre-flight rejects dead URLs" — **that feature is parked, do not test it** | `url.ts` validation rules; consumer's null-vs-throw branch | unit | testing a non-existent pre-flight feature; asserting an infinite-retry guard that isn't there |
 
 ## 3. Phased Rollout
@@ -77,7 +77,7 @@ orchestrator updates Status as artifacts appear on disk.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Bootstrap + pipeline unit logic | Stand up the runner; prove URL validation, consumer retry taxonomy, and vendor null-vs-throw classification in isolation | #6, #1 (partial) | unit | complete | context/changes/testing-pipeline-units/ |
-| 2 | Capture + processing integration | Webhook trust boundary, enqueue parity, consumer reaches a terminal state and never sticks (vendors mocked) | #1, #3, #5 | integration | not started | — |
+| 2 | Capture + processing integration | Webhook trust boundary, enqueue parity, consumer reaches a terminal state and never sticks (vendors mocked) | #1, #3, #5 | integration | researched | context/changes/testing-capture-processing-integration/ |
 | 3 | API authorization + auth | Links API user-scoping (404-not-403), auth/registration handler behavior | #2, #4 | integration | not started | — |
 | 4 | E2E critical path + CI gate | One Playwright flow signup → capture → link visible (Realtime JWT); wire the CI test gate | #4 (e2e), #1 (visible state) | e2e + CI gate | not started | — |
 
@@ -92,7 +92,7 @@ date so future readers can see which lines need re-verification.
 | Layer | Tool | Version | Notes |
 |-------|------|---------|-------|
 | unit + integration | none yet — see §3 Phase 1 | — | Vitest is the expected choice (Vite-native, Astro-compatible); confirm in Phase 1 research |
-| Worker integration | none yet — see §3 Phase 2 | — | candidate: `unstable_startWorker` / `vitest-pool-workers` for queue-consumer + API tests; confirm via Context7 |
+| Worker integration | Vitest (node env) + `vi.mock` | — | **`@cloudflare/vitest-pool-workers` NOT needed** (research 2026-06-27, testing-capture-processing-integration). All bindings reached via mockable virtual-module imports: `astro:env/server`, and `cloudflare:workers` (`env.LINK_QUEUE.send`). Mock `cloudflare:workers` for the queue-send spy; consumer + API handlers run as plain function calls. pool-workers only if real Queue delivery / RLS / workerd Request semantics are ever in scope |
 | API / network mocking | none yet — see §3 Phase 2 | — | mock the HTTP edge only (Firecrawl, LLM, Telegram, Supabase) — never internal modules |
 | e2e | Playwright (via MCP) | — | already used manually per `context/foundation/e2e-testing.md`; Phase 4 wires it as a committed test + CI gate |
 | (optional) AI-native | Playwright MCP — checked: 2026-06-14 | n/a | use for the single browser critical-path flow only; do NOT layer vision on deterministic logic tests |
@@ -194,8 +194,8 @@ unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-15
-- Stack versions last verified: 2026-06-15
+- Strategy (§1–§5) last reviewed: 2026-06-15 (§2 #1/#3/#5 + §4 backported from Phase 2 research 2026-06-27)
+- Stack versions last verified: 2026-06-27 (Worker integration: pool-workers ruled out, node+vi.mock confirmed)
 - AI-native tool references last verified: 2026-06-14
 
 Refresh (`/10x-test-plan --refresh`) when:
