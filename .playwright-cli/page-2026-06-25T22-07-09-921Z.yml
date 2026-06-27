@@ -1,5 +1,0 @@
-- generic [ref=e4]:
-  - generic [ref=e5]: tabzero
-  - button "T test@example.com" [ref=e8]:
-    - generic [ref=e9]: T
-    - generic [ref=e10]: test@example.com

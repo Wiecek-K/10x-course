@@ -451,6 +451,12 @@ per-user list — no extra queries. Deferred-delete timers are few and short-liv
 One additive, nullable column (`note`) — no backfill, no data migration. Existing rows get
 `note = null`. Reversible by dropping the column.
 
+**Post-review addendum (impl-review F1)**: `20260627022500_links_replica_identity_full.sql`
+sets `ALTER TABLE public.links REPLICA IDENTITY FULL`. Required because the Realtime DELETE
+listener filters by `user_id`, but the default PK-only replica identity omits `user_id` from
+the DELETE `old` payload, so cross-tab deletes never propagated. Reversible with
+`ALTER TABLE public.links REPLICA IDENTITY DEFAULT`. Apply to remote: `bunx supabase db push`.
+
 ## References
 
 - Frame brief: `context/changes/link-closure-flow/frame.md`

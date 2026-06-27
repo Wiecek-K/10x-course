@@ -13,6 +13,27 @@ interface UseLinkActionsOptions {
   restoreLink: (link: Link) => void;
 }
 
+// Fire the deferred DELETE for a link, retrying once on a non-2xx/non-404
+// response (404 means the row is already gone — treat as success). `keepalive`
+// keeps the request alive when it is dispatched during page unload/unmount,
+// where a normal fetch would be cancelled by the browser. The deferred path has
+// no live UI to restore into (the toast is gone, the component may be unmounted),
+// so on terminal failure we honor the delete intent and log rather than
+// resurrecting a "zombie" row minutes after the user closed it.
+async function fireDeleteWithRetry(id: string): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`/api/links/${id}`, { method: "DELETE", keepalive: true });
+      if (res.ok || res.status === 404) return true;
+    } catch {
+      // network error — fall through and retry
+    }
+  }
+  // eslint-disable-next-line no-console -- deferred-delete failure has no live UI; log for observability
+  console.error(`Deferred delete failed for link ${id} after retries`);
+  return false;
+}
+
 export function useLinkActions({ links, updateLink, removeLink, restoreLink }: UseLinkActionsOptions) {
   const pendingDeletes = useRef<Map<string, PendingDelete>>(new Map());
   const linksRef = useRef(links);
@@ -26,7 +47,7 @@ export function useLinkActions({ links, updateLink, removeLink, restoreLink }: U
     return () => {
       for (const [, entry] of pending) {
         clearTimeout(entry.timer);
-        void fetch(`/api/links/${entry.link.id}`, { method: "DELETE" });
+        void fireDeleteWithRetry(entry.link.id);
       }
       pending.clear();
     };
@@ -67,11 +88,13 @@ export function useLinkActions({ links, updateLink, removeLink, restoreLink }: U
   );
 
   const markVisited = useCallback((id: string) => {
+    // Fire-and-forget; best-effort visit marker, must not block navigation.
+    // Swallow rejections so a network failure isn't an unhandled rejection.
     void fetch(`/api/links/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ visited: true }),
-    });
+    }).catch(() => undefined);
   }, []);
 
   const removeImmediately = useCallback(
@@ -101,10 +124,13 @@ export function useLinkActions({ links, updateLink, removeLink, restoreLink }: U
 
       removeLink(id);
 
+      // Slightly longer than the undo toast (5000ms) so the undo window always
+      // closes before the DELETE fires — otherwise an undo click at the exact
+      // boundary races the delete and silently no-ops.
       const timer = setTimeout(() => {
         pendingDeletes.current.delete(id);
-        void fetch(`/api/links/${id}`, { method: "DELETE" });
-      }, 5000);
+        void fireDeleteWithRetry(id);
+      }, 5500);
 
       pendingDeletes.current.set(id, { link, timer });
 
