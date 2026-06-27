@@ -521,14 +521,14 @@ One additive, nullable column (`note`) — no backfill, no data migration. Exist
 
 #### Automated
 
-- [x] 4.1 Typecheck passes: `bun run build`
-- [x] 4.2 Lint passes: `bun run lint`
-- [x] 4.3 Tests pass: `bun run test`
-- [x] 4.4 Format check passes: `bun run format:check`
+- [x] 4.1 Typecheck passes: `bun run build` — 3cfb7fa
+- [x] 4.2 Lint passes: `bun run lint` — 3cfb7fa
+- [x] 4.3 Tests pass: `bun run test` — 3cfb7fa
+- [x] 4.4 Format check passes: `bun run format:check` — 3cfb7fa
 
 #### Manual
 
-- [x] 4.5 Library lists only `in_library=true` rows with note shown when present
-- [x] 4.6 Remove-from-library confirm dialog hard-deletes on confirm; cancel leaves row
-- [x] 4.7 Editing a library link (incl. note) persists and reflects immediately
-- [x] 4.8 Roadmap note for future FR-012 slice present and accurate
+- [x] 4.5 Library lists only `in_library=true` rows with note shown when present — 3cfb7fa
+- [x] 4.6 Remove-from-library confirm dialog hard-deletes on confirm; cancel leaves row — 3cfb7fa
+- [x] 4.7 Editing a library link (incl. note) persists and reflects immediately — 3cfb7fa
+- [x] 4.8 Roadmap note for future FR-012 slice present and accurate — 3cfb7fa
