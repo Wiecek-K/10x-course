@@ -407,28 +407,28 @@ wrangler config change is required.
 
 #### Automated
 
-- [x] 1.1 Type checking passes: `bun run lint`
-- [x] 1.2 Production build succeeds: `bun run build`
-- [x] 1.3 Existing unit suite still green: `bun run test`
-- [x] 1.4 Format clean: `bun run format:check`
+- [x] 1.1 Type checking passes: `bun run lint` — 9319c68
+- [x] 1.2 Production build succeeds: `bun run build` — 9319c68
+- [x] 1.3 Existing unit suite still green: `bun run test` — 9319c68
+- [x] 1.4 Format clean: `bun run format:check` — 9319c68
 
 #### Manual
 
-- [x] 1.5 `worker.ts` default export still exposes both `fetch` and `queue`
-- [x] 1.6 No behavioral diff in the consumer
+- [x] 1.5 `worker.ts` default export still exposes both `fetch` and `queue` — 9319c68
+- [x] 1.6 No behavioral diff in the consumer — 9319c68
 
 ### Phase 2: Consumer integration tests (#1)
 
 #### Automated
 
-- [ ] 2.1 Consumer test passes: `bun run test`
-- [ ] 2.2 Lint clean: `bun run lint`
-- [ ] 2.3 Format clean: `bun run format:check`
+- [x] 2.1 Consumer test passes: `bun run test`
+- [x] 2.2 Lint clean: `bun run lint`
+- [x] 2.3 Format clean: `bun run format:check`
 
 #### Manual
 
-- [ ] 2.4 Test asserts ordered status writes, not just final state
-- [ ] 2.5 Stuck-state gap documented in test comment + plan References
+- [x] 2.4 Test asserts ordered status writes, not just final state
+- [x] 2.5 Stuck-state gap documented in test comment + plan References
 
 ### Phase 3: Webhook trust boundary tests (#3)
 
