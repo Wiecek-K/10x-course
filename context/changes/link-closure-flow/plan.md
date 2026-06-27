@@ -504,31 +504,31 @@ One additive, nullable column (`note`) — no backfill, no data migration. Exist
 
 #### Automated
 
-- [x] 3.1 Typecheck passes: `bun run build`
-- [x] 3.2 Lint passes: `bun run lint`
-- [x] 3.3 Tests pass: `bun run test`
-- [x] 3.4 Format check passes: `bun run format:check`
+- [x] 3.1 Typecheck passes: `bun run build` — 1897cee
+- [x] 3.2 Lint passes: `bun run lint` — 1897cee
+- [x] 3.3 Tests pass: `bun run test` — 1897cee
+- [x] 3.4 Format check passes: `bun run format:check` — 1897cee
 
 #### Manual
 
-- [x] 3.5 Keep-in-library moves row Inbox → Library instantly
-- [x] 3.6 Consume-close / Discard remove row + undo toast; Undo restores; expiry hard-deletes
-- [x] 3.7 Opening a link records visit and shows the reminder
-- [x] 3.8 Edit modal saves url/micro_description/note
-- [x] 3.9 No layout breakage with four action buttons (incl. mobile)
+- [x] 3.5 Keep-in-library moves row Inbox → Library instantly — 1897cee
+- [x] 3.6 Consume-close / Discard remove row + undo toast; Undo restores; expiry hard-deletes — 1897cee
+- [x] 3.7 Opening a link records visit and shows the reminder — 1897cee
+- [x] 3.8 Edit modal saves url/micro_description/note — 1897cee
+- [x] 3.9 No layout breakage with four action buttons (incl. mobile) — 1897cee
 
 ### Phase 4: Library View
 
 #### Automated
 
-- [ ] 4.1 Typecheck passes: `bun run build`
-- [ ] 4.2 Lint passes: `bun run lint`
-- [ ] 4.3 Tests pass: `bun run test`
-- [ ] 4.4 Format check passes: `bun run format:check`
+- [x] 4.1 Typecheck passes: `bun run build`
+- [x] 4.2 Lint passes: `bun run lint`
+- [x] 4.3 Tests pass: `bun run test`
+- [x] 4.4 Format check passes: `bun run format:check`
 
 #### Manual
 
-- [ ] 4.5 Library lists only `in_library=true` rows with note shown when present
-- [ ] 4.6 Remove-from-library confirm dialog hard-deletes on confirm; cancel leaves row
-- [ ] 4.7 Editing a library link (incl. note) persists and reflects immediately
-- [ ] 4.8 Roadmap note for future FR-012 slice present and accurate
+- [x] 4.5 Library lists only `in_library=true` rows with note shown when present
+- [x] 4.6 Remove-from-library confirm dialog hard-deletes on confirm; cancel leaves row
+- [x] 4.7 Editing a library link (incl. note) persists and reflects immediately
+- [x] 4.8 Roadmap note for future FR-012 slice present and accurate
