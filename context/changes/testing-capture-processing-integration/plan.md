@@ -421,27 +421,27 @@ wrangler config change is required.
 
 #### Automated
 
-- [x] 2.1 Consumer test passes: `bun run test`
-- [x] 2.2 Lint clean: `bun run lint`
-- [x] 2.3 Format clean: `bun run format:check`
+- [x] 2.1 Consumer test passes: `bun run test` — 617beb4
+- [x] 2.2 Lint clean: `bun run lint` — 617beb4
+- [x] 2.3 Format clean: `bun run format:check` — 617beb4
 
 #### Manual
 
-- [x] 2.4 Test asserts ordered status writes, not just final state
-- [x] 2.5 Stuck-state gap documented in test comment + plan References
+- [x] 2.4 Test asserts ordered status writes, not just final state — 617beb4
+- [x] 2.5 Stuck-state gap documented in test comment + plan References — 617beb4
 
 ### Phase 3: Webhook trust boundary tests (#3)
 
 #### Automated
 
-- [ ] 3.1 Webhook test passes: `bun run test`
-- [ ] 3.2 Lint clean: `bun run lint`
-- [ ] 3.3 Format clean: `bun run format:check`
+- [x] 3.1 Webhook test passes: `bun run test`
+- [x] 3.2 Lint clean: `bun run lint`
+- [x] 3.3 Format clean: `bun run format:check`
 
 #### Manual
 
-- [ ] 3.4 Forged-secret case asserts 401 before any DB call
-- [ ] 3.5 Inserted `user_id` provably from trusted lookup, not request body
+- [x] 3.4 Forged-secret case asserts 401 before any DB call
+- [x] 3.5 Inserted `user_id` provably from trusted lookup, not request body
 
 ### Phase 4: Enqueue parity tests (#5)
 
