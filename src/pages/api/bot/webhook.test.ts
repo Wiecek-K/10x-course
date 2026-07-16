@@ -5,6 +5,8 @@ const mockEnv = vi.hoisted((): { TELEGRAM_WEBHOOK_SECRET: string | undefined } =
   TELEGRAM_WEBHOOK_SECRET: "test-secret",
 }));
 
+const linkQueueSend = vi.hoisted(() => vi.fn());
+
 vi.mock("astro:env/server", () => ({
   get TELEGRAM_WEBHOOK_SECRET() {
     return mockEnv.TELEGRAM_WEBHOOK_SECRET;
@@ -24,7 +26,7 @@ vi.mock("@/lib/telegram", () => ({
 
 vi.mock("cloudflare:workers", () => ({
   env: {
-    LINK_QUEUE: { send: vi.fn() },
+    LINK_QUEUE: { send: linkQueueSend },
   },
 }));
 
@@ -151,6 +153,28 @@ describe("POST /api/bot/webhook", () => {
       expect(URL_PAYLOAD).not.toHaveProperty("user_id");
       expect(URL_PAYLOAD.message).not.toHaveProperty("user_id");
       expect(URL_PAYLOAD.message.from).not.toHaveProperty("user_id");
+    });
+  });
+
+  describe("enqueue parity (#5)", () => {
+    it("calls LINK_QUEUE.send with correct payload after successful bot capture", async () => {
+      const mappedUserId = "mapped-user-from-db";
+      const insertedLinkId = "bot-link-id";
+      const { admin } = makeCaptureFake({
+        telegramLinkData: { user_id: mappedUserId },
+        linkInsertData: { id: insertedLinkId },
+      });
+      vi.mocked(createAdminClient).mockReturnValue(admin as unknown as ReturnType<typeof createAdminClient>);
+
+      await POST(makeContext(makeRequest(URL_PAYLOAD, "test-secret")));
+
+      expect(linkQueueSend).toHaveBeenCalledOnce();
+      expect(linkQueueSend).toHaveBeenCalledWith({
+        type: "describe",
+        v: 1,
+        linkId: insertedLinkId,
+        userId: mappedUserId,
+      });
     });
   });
 });

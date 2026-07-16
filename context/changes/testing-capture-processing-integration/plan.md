@@ -434,27 +434,27 @@ wrangler config change is required.
 
 #### Automated
 
-- [x] 3.1 Webhook test passes: `bun run test`
-- [x] 3.2 Lint clean: `bun run lint`
-- [x] 3.3 Format clean: `bun run format:check`
+- [x] 3.1 Webhook test passes: `bun run test` — ff2b81c
+- [x] 3.2 Lint clean: `bun run lint` — ff2b81c
+- [x] 3.3 Format clean: `bun run format:check` — ff2b81c
 
 #### Manual
 
-- [x] 3.4 Forged-secret case asserts 401 before any DB call
-- [x] 3.5 Inserted `user_id` provably from trusted lookup, not request body
+- [x] 3.4 Forged-secret case asserts 401 before any DB call — ff2b81c
+- [x] 3.5 Inserted `user_id` provably from trusted lookup, not request body — ff2b81c
 
 ### Phase 4: Enqueue parity tests (#5)
 
 #### Automated
 
-- [ ] 4.1 Enqueue tests pass: `bun run test`
-- [ ] 4.2 Lint clean: `bun run lint`
-- [ ] 4.3 Format clean: `bun run format:check`
+- [x] 4.1 Enqueue tests pass: `bun run test`
+- [x] 4.2 Lint clean: `bun run lint`
+- [x] 4.3 Format clean: `bun run format:check`
 
 #### Manual
 
-- [ ] 4.4 Both capture paths assert enqueue
-- [ ] 4.5 Payload shape matches `{type:"describe",v:1,linkId,userId}`
+- [x] 4.4 Both capture paths assert enqueue
+- [x] 4.5 Payload shape matches `{type:"describe",v:1,linkId,userId}`
 
 ### Phase 5: Cookbook + test-plan update
 
