@@ -460,9 +460,9 @@ wrangler config change is required.
 
 #### Automated
 
-- [x] 5.1 Format clean: `bun run format:check`
+- [x] 5.1 Format clean: `bun run format:check` — e16e849
 
 #### Manual
 
-- [x] 5.2 §6.2 and §6.5 no longer read `TBD`
-- [x] 5.3 §3 Phase 2 Status is `complete`
+- [x] 5.2 §6.2 and §6.5 no longer read `TBD` — e16e849
+- [x] 5.3 §3 Phase 2 Status is `complete` — e16e849
