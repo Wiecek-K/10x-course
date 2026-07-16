@@ -447,22 +447,22 @@ wrangler config change is required.
 
 #### Automated
 
-- [x] 4.1 Enqueue tests pass: `bun run test`
-- [x] 4.2 Lint clean: `bun run lint`
-- [x] 4.3 Format clean: `bun run format:check`
+- [x] 4.1 Enqueue tests pass: `bun run test` — 951cfee
+- [x] 4.2 Lint clean: `bun run lint` — 951cfee
+- [x] 4.3 Format clean: `bun run format:check` — 951cfee
 
 #### Manual
 
-- [x] 4.4 Both capture paths assert enqueue
-- [x] 4.5 Payload shape matches `{type:"describe",v:1,linkId,userId}`
+- [x] 4.4 Both capture paths assert enqueue — 951cfee
+- [x] 4.5 Payload shape matches `{type:"describe",v:1,linkId,userId}` — 951cfee
 
 ### Phase 5: Cookbook + test-plan update
 
 #### Automated
 
-- [ ] 5.1 Format clean: `bun run format:check`
+- [x] 5.1 Format clean: `bun run format:check`
 
 #### Manual
 
-- [ ] 5.2 §6.2 and §6.5 no longer read `TBD`
-- [ ] 5.3 §3 Phase 2 Status is `complete`
+- [x] 5.2 §6.2 and §6.5 no longer read `TBD`
+- [x] 5.3 §3 Phase 2 Status is `complete`

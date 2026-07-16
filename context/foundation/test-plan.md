@@ -6,7 +6,7 @@
 >
 > Refresh: re-run `/10x-test-plan --refresh` when stale (see §8).
 >
-> Last updated: 2026-06-27 (Phase 2 change opened: testing-capture-processing-integration)
+> Last updated: 2026-07-16 (Phase 2 complete: testing-capture-processing-integration)
 
 ## 1. Strategy
 
@@ -77,7 +77,7 @@ orchestrator updates Status as artifacts appear on disk.
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Bootstrap + pipeline unit logic | Stand up the runner; prove URL validation, consumer retry taxonomy, and vendor null-vs-throw classification in isolation | #6, #1 (partial) | unit | complete | context/changes/testing-pipeline-units/ |
-| 2 | Capture + processing integration | Webhook trust boundary, enqueue parity, consumer reaches a terminal state and never sticks (vendors mocked) | #1, #3, #5 | integration | researched | context/changes/testing-capture-processing-integration/ |
+| 2 | Capture + processing integration | Webhook trust boundary, enqueue parity, consumer reaches a terminal state and never sticks (vendors mocked) | #1, #3, #5 | integration | complete | context/changes/testing-capture-processing-integration/ |
 | 3 | API authorization + auth | Links API user-scoping (404-not-403), auth/registration handler behavior | #2, #4 | integration | not started | — |
 | 4 | E2E critical path + CI gate | One Playwright flow signup → capture → link visible (Realtime JWT); wire the CI test gate | #4 (e2e), #1 (visible state) | e2e + CI gate | not started | — |
 
@@ -163,7 +163,63 @@ expect(await scrapeFirecrawl(url)).toBeNull();                     // 402/404/no
 
 ### 6.2 Adding an integration test
 
-- TBD — see §3 Phase 2 (capture/webhook + queue-consumer-with-mocked-vendors pattern).
+For API route handlers (e.g. `POST /api/links`, `POST /api/bot/webhook`). Reference implementations: `src/pages/api/links/index.test.ts`, `src/pages/api/bot/webhook.test.ts`.
+
+**Colocate** test next to route: `src/pages/api/foo/index.ts` → `src/pages/api/foo/index.test.ts`.
+
+**Three mock seams** — all `vi.mock()` calls must appear before the SUT import (they are hoisted above imports by Vitest):
+
+```ts
+vi.mock("astro:env/server", () => ({ SUPABASE_URL: "...", SUPABASE_KEY: "..." }));
+vi.mock("@/lib/supabase", () => ({ createClient: vi.fn() }));  // or supabase-admin
+vi.mock("cloudflare:workers", () => ({ env: { LINK_QUEUE: { send: linkQueueSend } } }));
+```
+
+For **mutable env state** that changes between tests (e.g. secret present vs. unset), use `vi.hoisted()`:
+
+```ts
+const mockSecret = vi.hoisted((): { value: string | undefined } => ({ value: "good-secret" }));
+vi.mock("astro:env/server", () => ({ get MY_SECRET() { return mockSecret.value; } }));
+// in a test: mockSecret.value = undefined;
+```
+
+For **spy references** that must be accessible inside both the factory closure and test expectations, also use `vi.hoisted()`:
+
+```ts
+const linkQueueSend = vi.hoisted(() => vi.fn());
+vi.mock("cloudflare:workers", () => ({ env: { LINK_QUEUE: { send: linkQueueSend } } }));
+// in a test: expect(linkQueueSend).toHaveBeenCalledWith({ type: "describe", v: 1, linkId, userId });
+```
+
+**Build the context** directly — no framework helper needed:
+
+```ts
+function makeContext(opts = {}): Parameters<typeof POST>[0] {
+  return {
+    locals: { user: { id: "user-id" } },
+    request: new Request("https://app/api/foo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url: "https://example.com" }),
+    }),
+    cookies: {},
+  } as unknown as Parameters<typeof POST>[0];
+}
+```
+
+**Supabase fake** — hand-rolled chainable; `as unknown as ReturnType<typeof createClient>` silences the structural mismatch:
+
+```ts
+vi.mocked(createClient).mockReturnValue({
+  from: () => ({
+    insert: vi.fn().mockReturnValue({
+      select: () => ({ single: () => Promise.resolve({ data: { id: "link-id" }, error: null }) }),
+    }),
+  }),
+} as unknown as ReturnType<typeof createClient>);
+```
+
+Use `vi.resetAllMocks()` in `beforeEach` to clear call counts; re-configure spies per test.
 
 ### 6.3 Adding an e2e test
 
@@ -175,7 +231,52 @@ expect(await scrapeFirecrawl(url)).toBeNull();                     // 402/404/no
 
 ### 6.5 Adding a test for the queue consumer
 
-- TBD — see §3 Phase 2 (terminal-state-never-stuck + null-vs-throw retry pattern).
+Reference implementation: `src/lib/queue-consumer.test.ts`.
+
+**Import from the extracted module**, not the Worker entrypoint (which pulls in the Astro SSR handler):
+
+```ts
+import { queue } from "@/lib/queue-consumer";  // NOT @/worker
+```
+
+**Build the batch** by hand — no CF Queues runtime needed:
+
+```ts
+const ack = vi.fn();
+const retry = vi.fn();
+const body: QueueMessage = { type: "describe", v: 1, linkId: "l-1", userId: "u-1" };
+const batch = { messages: [{ body, ack, retry }] };
+await queue(batch as MessageBatch<QueueMessage>);
+```
+
+**Ordered status write assertion** — the key signal for Risk #1. Track `update()` call arguments across invocations:
+
+```ts
+const updateSpy = vi.fn();
+const admin = {
+  from: vi.fn().mockReturnValue({
+    select: () => ({ eq: () => ({ maybeSingle: () => Promise.resolve({ data: { url }, error: null }) }) }),
+    update: (data: unknown) => { updateSpy(data); return { eq: () => Promise.resolve({}) }; },
+  }),
+};
+vi.mocked(createAdminClient).mockReturnValue(admin as unknown as ReturnType<typeof createAdminClient>);
+
+// assert ordered writes, not just final state:
+expect(updateSpy.mock.calls[0][0]).toMatchObject({ processing_status: "scraping" });
+expect(updateSpy.mock.calls[1][0]).toMatchObject({ processing_status: "describing" });
+expect(updateSpy.mock.calls[2][0]).toMatchObject({ processing_status: "done" });
+expect(ack).toHaveBeenCalledOnce();
+```
+
+**Documented gap — transient throw path.** A transient throw → `retry()` with no terminal status write. After `max_retries: 3` (`wrangler.jsonc`) the message hits the DLQ and the row is stuck in `scraping`/`describing` forever (no DLQ consumer/reaper exists). Assert `retry()` was called and that no `failed` write occurred — makes the gap observable rather than silently untested:
+
+```ts
+// DOCUMENTED GAP: transient throw → retry() only; no terminal write → row stuck after DLQ
+expect(retry).toHaveBeenCalledOnce();
+expect(updateSpy).not.toHaveBeenCalledWith(expect.objectContaining({ processing_status: "failed" }));
+```
+
+**Null-vs-throw contract** — `null` from vendor = definitive miss → `failed` + `ack()`; `throw` = transient → `retry()` (no status write). Assert both sides for every vendor branch.
 
 ### 6.6 Per-rollout-phase notes
 
@@ -194,7 +295,7 @@ unless the underlying assumption changes.
 
 ## 8. Freshness Ledger
 
-- Strategy (§1–§5) last reviewed: 2026-06-15 (§2 #1/#3/#5 + §4 backported from Phase 2 research 2026-06-27)
+- Strategy (§1–§5) last reviewed: 2026-07-16 (§3 Phase 2 marked complete; §6.2, §6.5 cookbook filled in)
 - Stack versions last verified: 2026-06-27 (Worker integration: pool-workers ruled out, node+vi.mock confirmed)
 - AI-native tool references last verified: 2026-06-14
 
