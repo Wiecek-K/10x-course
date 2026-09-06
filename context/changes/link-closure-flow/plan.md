@@ -501,10 +501,10 @@ the DELETE `old` payload, so cross-tab deletes never propagated. Reversible with
 
 #### Manual
 
-- [ ] 2.5 DELETE in one tab removes row in a second tab (realtime DELETE)
-- [ ] 2.6 `in_library` flip re-buckets row in a second tab (realtime UPDATE)
-- [ ] 2.7 Dashboard renders separate Inbox and Library sections; no library rows in inbox
-- [ ] 2.8 Optimistic action reflects instantly; forced server error rolls back
+- [x] 2.5 DELETE in one tab removes row in a second tab (realtime DELETE) — f59c339
+- [x] 2.6 `in_library` flip re-buckets row in a second tab (realtime UPDATE) — f59c339
+- [x] 2.7 Dashboard renders separate Inbox and Library sections; no library rows in inbox — f59c339
+- [x] 2.8 Optimistic action reflects instantly; forced server error rolls back — f59c339
 
 ### Phase 3: Inbox Closure UI
 
