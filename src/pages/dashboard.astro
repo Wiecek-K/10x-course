@@ -1,7 +1,7 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import AccountMenu from "@/components/AccountMenu";
-import InboxList from "@/components/InboxList";
+import LinksDashboard from "@/components/LinksDashboard";
 import { createClient } from "@/lib/supabase";
 import { SUPABASE_URL, SUPABASE_KEY } from "astro:env/server";
 import type { Link } from "@/types";
@@ -30,16 +30,13 @@ if (supabase && user) {
         <AccountMenu client:load email={user?.email ?? ""} connected={connected} />
       </div>
 
-      <div class="rounded-2xl border border-white/10 bg-white/5 p-6">
-        <h2 class="mb-4 text-lg font-semibold text-white">Inbox</h2>
-        <InboxList
-          client:only="react"
-          initialLinks={initialLinks}
-          userId={user?.id ?? ""}
-          supabaseUrl={SUPABASE_URL ?? ""}
-          supabaseAnonKey={SUPABASE_KEY ?? ""}
-        />
-      </div>
+      <LinksDashboard
+        client:only="react"
+        initialLinks={initialLinks}
+        userId={user?.id ?? ""}
+        supabaseUrl={SUPABASE_URL ?? ""}
+        supabaseAnonKey={SUPABASE_KEY ?? ""}
+      />
     </div>
   </div>
 </Layout>

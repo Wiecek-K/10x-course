@@ -3,7 +3,7 @@ project: tabzero
 version: 1
 status: draft
 created: 2026-05-29
-updated: 2026-06-25
+updated: 2026-09-06
 prd_version: 1
 main_goal: market-feedback
 top_blocker: capacity
@@ -33,7 +33,7 @@ Osoba z wieloma równoległymi zainteresowaniami zapisuje dziesiątki linków ty
 | F-02 | `link-processing-queue`         | (foundation) Cloudflare Queue podpięta; producer/consumer scaffold; brak logiki                                                          | —                | NFR "Latencja potwierdzenia ≤2s", infrastructure.md                            | done     |
 | S-01 | `bot-capture-to-inbox`          | wysłać URL do bota i zobaczyć link w inboxie (URL only, opis przyjdzie z S-02)                                                           | F-01             | FR-002, FR-010, NFR "Latencja potwierdzenia ≤2s"                               | done     |
 | S-02 | `auto-description-pipeline`     | zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie                                          | F-01, F-02, S-01 | FR-004, FR-005, NFR "Niezawodność zapisu", NFR "Dostępność funkcji core"       | done     |
-| S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | proposed |
+| S-04 | `link-closure-flow`             | przejrzeć inbox, otworzyć link (wizyta zapisana), świadomie zamknąć link w jednym z 3 trybów z opcjonalną notatką; ręcznie edytować opis | F-01, S-01       | FR-008, FR-007 (browse "wszystkie"), NFR "Niezawodność zapisu" (ręczna edycja) | done |
 | S-03 | `nl-search-on-links`            | wpisać zapytanie w naturalnym języku i dostać pasujące linki w ≤5s                                                                       | F-01, S-02       | FR-007 (NL search), FR-009, US-02                                              | proposed |
 | S-06 | `category-proposal-and-routing` | dostać propozycję struktury kategorii po N linkach; dodawać własne kategorie z meta-instrukcjami; nowe linki auto-routowane              | F-01, F-02, S-02 | FR-006, FR-007 (per-kategoria), FR-011, Success Criteria §Secondary            | proposed |
 | S-05 | `extension-capture`             | kliknąć ikonę rozszerzenia przeglądarki i zapisać link w ≤2 kliknięciach                                                                 | F-01             | FR-001, FR-010, US-01                                                          | proposed |
@@ -159,7 +159,7 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** mały slice technicznie ale ciężki UX-owo — 4-stanowy lifecycle z celowym tarciem przy zamknięciu jest filozoficznym sercem produktu (PRD §Business Logic). Jeśli dogfooding pokaże że tarcie jest źle skalibrowane, kalibracja wraca jako iteracja, nie redesign.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: NL search na zapisanych linkach
 
@@ -235,6 +235,8 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Tryb rozszerzonego zapisu (formularz capture z priorytetem / notatką / ręczną kategorią)** — PRD §Non-Goals: v2+; domyślny 2-klikowy zapis jest jedynym trybem MVP.
 - **FR-003: Import zakładek z HTML eksportu przeglądarki** — nice-to-have. Parked ze względu na `top_blocker: capacity` (3 tygodnie after-hours). Wraca jako kandydat po dogfoodingu jeśli czas pozwoli.
 - **FR-012: Dashboard aktywności per kategoria** — nice-to-have. PRD §Dashboard explicite: "jeśli nie starczy czasu w 3-tygodniowym MVP, dashboard wchodzi w sprint post-MVP". Model danych w F-01 + S-04 + S-06 zbiera surowce; widok dochodzi później.
+
+- **S-04 deferral — closure event-log + consumed/discarded counter (`closure-stats-dashboard`)**: S-04 (`link-closure-flow`) uses a single hard-DELETE for both A3 (Consume-close) and A4 (Discard) — the two actions are indistinguishable in storage. A future `closure-stats-dashboard` slice should introduce a closure event-log (recording the action type before deleting) and a per-user consumed/discarded counter surfaced in the dashboard. Statistics will start from zero at implementation time (no backfill). Prerequisite: S-04 done. Tracked as FR-012 follow-on; unlocks activity dashboard post-MVP.
 - **Cloudflare Builds CI auto-deploy-on-merge** — operacyjne, śledzone w `context/deployment/deploy-plan.md` jako pending. Poza zakresem feature roadmapy.
 - **Sterowanie opisem przy capture przez bota (rozwój S-01)** — user mógłby wpływać na micro-opis poleceniem/tekstem przy udostępnianiu linka. Open question: jedna wiadomość vs. wieloetapowa rozmowa z botem. Post-MVP; S-01 zapisuje tylko URL.
 - **Preferencja obsługi duplikatów (rozwój S-01)** — opcja w ustawieniach: co się dzieje gdy user wyśle duplikat URL (dopasowanie UX do preferencji). Wymaga researchu jakie zachowania userzy faktycznie preferują. Post-MVP; MVP zapisuje duplikaty bez sprawdzania.
@@ -262,3 +264,4 @@ Co jest już w bazie kodu na `2026-05-29` (auto-zbadane + user-confirmed). Found
 - **Dev-tooling: katalog wyjściowy Playwright MCP (TAB-15)** — Archived 2026-06-07 → `context/archive/2026-06-05-playwright-mcp-output-dir/`. Lesson: —.
 - **S-02a: dla linków YouTube (`youtube.com/watch`, `/shorts/`, `youtu.be`) system zapisuje micro-opis złożony z tytułu filmu + nazwy kanału autora pobranych z metadanych URL (bez Firecrawl, bez LLM), zachowując placeholder informujący, że pełna transkrypcja jest w przygotowaniu. Zastępuje statyczny `"YouTube video — transcript coming soon."` bogatszym, wciąż lekkim opisem.** — Archived 2026-06-25 → `context/archive/2026-06-16-youtube-metadata-description/`. Lesson: serverless egress IPs get 403'd by consumer endpoints — verify happy path from deployed Worker.
 - **S-02: zobaczyć auto-opis przy każdym zapisanym linku w ≤30s; linki niescrapowalne oznaczone wizualnie** — Archived 2026-06-09 → `context/archive/2026-06-07-auto-description-pipeline/`. Lesson: —.
+- **S-04: użytkownik widzi inbox (chronologiczna lista linków), klika link żeby go otworzyć (rejestrowany visit + timestamp; stan się NIE zmienia), oraz świadomie zamyka link w jednym z 3 trybów ("pochłonięte — zachowaj w bibliotece" / "pochłonięte — zamknij" / "odrzuć") z opcjonalną notatką. Ręczna edycja opisu i URL dostępna dla każdego linka.** — Archived 2026-09-06 → `context/archive/2026-06-25-link-closure-flow/`. Lesson: —.

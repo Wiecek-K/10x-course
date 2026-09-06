@@ -1,6 +1,6 @@
 import type { Database } from "@/db/database.types";
 import type { z } from "zod";
-import type { CreateLinkSchema, ListLinksQuerySchema } from "@/lib/schemas/links";
+import type { CreateLinkSchema, ListLinksQuerySchema, UpdateLinkSchema } from "@/lib/schemas/links";
 
 export type PairingCode = Database["public"]["Tables"]["pairing_codes"]["Row"];
 export type PairingCodeInsert = Database["public"]["Tables"]["pairing_codes"]["Insert"];
@@ -28,3 +28,5 @@ export type LinkInsert = Database["public"]["Tables"]["links"]["Insert"];
 export type CreateLinkInput = z.infer<typeof CreateLinkSchema>;
 
 export type ListLinksQuery = z.infer<typeof ListLinksQuerySchema>;
+
+export type UpdateLinkInput = z.infer<typeof UpdateLinkSchema>;

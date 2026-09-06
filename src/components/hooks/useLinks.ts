@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser";
 import type { Link } from "@/types";
@@ -12,10 +12,6 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
     const state = { cancelled: false };
 
     void (async () => {
-      // Restore the session from cookies, then attach the user JWT to the
-      // Realtime socket BEFORE subscribing — otherwise the channel joins as
-      // anon and the links SELECT RLS policy (auth.uid() = user_id) drops
-      // every INSERT event while still reporting SUBSCRIBED.
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -23,7 +19,7 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
       if (state.cancelled) return;
 
       channel = supabase
-        .channel("inbox-inserts")
+        .channel("links-realtime")
         .on(
           "postgres_changes",
           { event: "INSERT", schema: "public", table: "links", filter: `user_id=eq.${userId}` },
@@ -38,6 +34,13 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
             setLinks((prev) => prev.map((l) => (l.id === payload.new.id ? (payload.new as Link) : l)));
           },
         )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "links", filter: `user_id=eq.${userId}` },
+          (payload) => {
+            setLinks((prev) => prev.filter((l) => l.id !== payload.old.id));
+          },
+        )
         .subscribe();
     })();
 
@@ -47,5 +50,20 @@ export function useLinks(initialLinks: Link[], userId: string, supabaseUrl: stri
     };
   }, [userId, supabaseUrl, supabaseAnonKey]);
 
-  return links;
+  const updateLink = useCallback((id: string, fields: Partial<Link>) => {
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, ...fields } : l)));
+  }, []);
+
+  const removeLink = useCallback((id: string) => {
+    setLinks((prev) => prev.filter((l) => l.id !== id));
+  }, []);
+
+  const restoreLink = useCallback((link: Link) => {
+    setLinks((prev) => {
+      if (prev.some((l) => l.id === link.id)) return prev;
+      return [link, ...prev].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    });
+  }, []);
+
+  return { links, setLinks, updateLink, removeLink, restoreLink };
 }

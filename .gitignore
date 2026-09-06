@@ -48,6 +48,8 @@ supabase/snippets/
 
 # Playwright MCP session artifacts (snapshots, console logs)
 .playwright-mcp/
+# Playwright CLI page snapshots (accessibility-tree dumps; working artifacts)
+.playwright-cli/
 # Playwright artifacts (agents write here; never the repo root)
 playwright-artifacts/*
 !playwright-artifacts/.gitkeep

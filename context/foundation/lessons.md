@@ -210,3 +210,10 @@ This project's development setup (`wrangler dev`) connects to the **remote** Sup
 **Rule**: When a Worker calls a consumer endpoint that may discriminate by IP, treat "works locally" as no evidence the happy path works in prod. Verify the happy path from the _deployed_ Worker, and ship a stable, countable miss log (e.g. `youtube_oembed_miss`) so the real hit-rate is observable in Workers Logs / Logpush rather than assumed. If misses dominate, the feature isn't delivering — change the source (keyed API, transcript provider, proxy), don't just keep the fallback.
 
 **Applies to**: S-02a YouTube oEmbed; any future Worker→third-party consumer-endpoint call (scrape fallbacks, keyless public APIs, parked `music.youtube.com` reuse).
+
+## Realtime INSERT handlers must dedup against SSR-seeded rows
+
+- **Context**: Any React island seeded with SSR `initialLinks` (or equivalent) that also subscribes to Supabase Realtime `postgres_changes` INSERT — `src/components/hooks/useLinks.ts` and any future live-list island.
+- **Problem**: A row created just before page load is already in the SSR snapshot; the subscription then delivers its (backlogged) INSERT event after mount, and an unguarded `setLinks(prev => [payload.new, ...prev])` prepends a second copy with the same `id` — duplicate row + colliding React `key`. UPDATE/DELETE handlers and `restoreLink` are safe because they match/dedup by id; INSERT was the only unguarded path.
+- **Rule**: In a Realtime INSERT handler, always dedup by primary key before prepending: `setLinks(prev => prev.some(l => l.id === row.id) ? prev : [row, ...prev])`. Never assume the stream and the SSR seed are disjoint — the pre-load write race overlaps them.
+- **Applies to**: implement, impl-review
