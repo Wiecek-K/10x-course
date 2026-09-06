@@ -2,3 +2,4 @@
 src/db/database.types.ts
 worker-configuration.d.ts
 supabase/.temp/
+.playwright-cli/
