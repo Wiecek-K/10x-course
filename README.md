@@ -1,175 +1,259 @@
-# 10x Astro Starter
+# tabzero
 
-![](./public/template.png)
+Personal link library with zero-friction capture and AI-powered micro-descriptions. Save a link in two clicks or one message; find it weeks later by asking in plain language — no category system to design upfront.
 
-A modern, opinionated starter template for building fast, accessible web applications.
+Live: https://tabzero.ajmag.workers.dev
 
-## Tech Stack
+---
 
-- [Astro](https://astro.build/) v6 - Modern web framework with server-first rendering
-- [React](https://react.dev/) v19 - UI library for interactive components
-- [TypeScript](https://www.typescriptlang.org/) v5 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4 - Utility-first CSS framework
-- [Supabase](https://supabase.com/) - Authentication and backend-as-a-service
-- [Cloudflare Workers](https://workers.cloudflare.com/) - Edge deployment runtime
+## What it does
 
-## Prerequisites
+- **Capture** — send a URL to the Telegram bot; it confirms in under 2 seconds
+- **Auto-describe** — the background pipeline scrapes the page via Firecrawl and generates a micro-description using an LLM; YouTube links get title + channel from oEmbed instead
+- **Inbox management** — review links, track visits, and consciously close each one in one of three modes: _keep in library_, _consume and close_, or _discard_
+- **Library** — closed-but-kept links stay searchable; natural-language search is next on the roadmap
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+---
 
-## Getting Started
+## Tech stack
 
-1. Clone the repository:
+| Layer | Choice |
+|---|---|
+| Framework | Astro 6 SSR + React 19 islands |
+| Styles | Tailwind v4 + shadcn/ui (new-york) |
+| Database / Auth | Supabase (PostgreSQL + RLS + SSR sessions) |
+| Runtime / Deploy | Cloudflare Workers via `@astrojs/cloudflare` |
+| Background jobs | Cloudflare Queues (`tabzero-link-processing`) |
+| Package manager | Bun |
+| CI | Cloudflare Builds (auto-deploy on merge to `main`) |
 
-```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
+---
 
-2. Install dependencies:
+## Local development
 
-```bash
-npm install
-```
+### Prerequisites
 
-3. Set up Supabase and configure environment variables — see [Supabase Configuration](#supabase-configuration) below.
+- [Bun](https://bun.sh) ≥ 1.1
+- [Docker](https://docs.docker.com/get-docker/) (for local Supabase)
+- [Wrangler](https://developers.cloudflare.com/workers/wrangler/) (`bun add -g wrangler`)
 
-4. Create a `.dev.vars` file for local Cloudflare dev secrets:
-
-```bash
-cp .env.example .dev.vars
-```
-
-5. Run the development server:
+### Setup
 
 ```bash
-npm run dev
+# 1. Install dependencies
+bun install
+
+# 2. Environment — two separate files (wrangler reads .dev.vars, not .env)
+cp .env.example .env          # for Node-based tooling (Vitest, type-gen)
+cp .env.example .dev.vars     # for wrangler dev
+
+# 3. Fill in both files: SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_ROLE_KEY,
+#    TELEGRAM_BOT_TOKEN, TELEGRAM_SECRET_TOKEN, ANTHROPIC_API_KEY, FIRECRAWL_API_KEY
+
+# 4. Start local Supabase stack
+bunx supabase start
+# Studio at http://localhost:54323
+
+# 5. Apply migrations
+bunx supabase db reset
+
+# 6. Start the dev server (Cloudflare workerd runtime)
+bun run dev
 ```
 
-## Available Scripts
-
-- `npm run dev` - Start development server (Cloudflare workerd runtime)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint with type-checked rules
-- `npm run lint:fix` - Auto-fix ESLint issues
-- `npm run format` - Run Prettier
-
-## Project Structure
-
-```md
-.
-├── src/
-│ ├── layouts/ # Astro layouts
-│ ├── pages/ # Astro pages
-│ │ └── api/ # API endpoints
-│ ├── components/ # UI components (Astro & React)
-│ └── assets/ # Static assets
-├── public/ # Public assets
-├── wrangler.jsonc # Cloudflare Workers config
-```
-
-## Supabase Configuration
-
-This project uses [Supabase](https://supabase.com/) for authentication. Environment variables are declared via Astro's `astro:env` schema and are treated as **server-only secrets** — they are never exposed to the client.
-
-### First-time setup (local, no cloud project needed)
-
-Requires [Docker](https://www.docker.com/) and ~7 GB RAM.
-
-1. Create your `.env` file:
+### Commands
 
 ```bash
-cp .env.example .env
+bun run dev          # dev server (workerd runtime via wrangler)
+bun run build        # production build (SSR via @astrojs/cloudflare)
+bun run preview      # preview production build
+
+bun run test         # Vitest unit suite (Node environment)
+bun run test:watch   # Vitest in watch mode
+
+bun run lint         # ESLint with type-checked rules
+bun run lint:fix     # auto-fix lint issues
+bun run format       # Prettier (printWidth: 120; .md excluded)
+bun run format:check # CI gate — run before opening a PR
 ```
 
-2. Initialize the local Supabase project (creates a `supabase/` config folder):
+> **Before opening a PR:** run `bun run format`. CI fails on `format:check`.
+> Three layers keep formatting clean: the post-edit hook formats files as they are edited,
+> the pre-commit hook (Husky + lint-staged) formats staged files, and `bun run format`
+> catches anything outside those paths.
 
-```bash
-npx supabase init
-```
+### Telegram bot (local)
 
-3. Start the local stack (downloads Docker images on first run):
-
-```bash
-npx supabase start
-```
-
-4. Copy the credentials printed by the CLI into your `.env` and `.dev.vars`:
+The bot webhook endpoint is `POST /api/bot/webhook`. For local testing, expose it with
+[ngrok](https://ngrok.com) or similar, then register the URL with Telegram:
 
 ```
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_KEY=<anon key from CLI output>
+https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://<your-tunnel>/api/bot/webhook&secret_token=<TELEGRAM_SECRET_TOKEN>
 ```
 
-5. To stop the stack when done:
+---
 
-```bash
-npx supabase stop
+## Architecture
+
+### Rendering
+
+Full SSR (`output: "server"` in `astro.config.mjs`). React is used only for interactive
+islands — inbox list, closure dialog, edit dialog, link dashboard. Static content and layout
+stay in Astro.
+
+### Auth
+
+Cookie-based sessions via `@supabase/ssr`. `src/middleware.ts` resolves the user on every
+request and attaches them to `context.locals.user`. Protected routes redirect unauthenticated
+users to `/auth/signin`. The Telegram bot writes links using a Supabase admin client
+(service-role key) and resolves `telegram_id → user_id` from the pairing-codes table.
+
+### Link processing pipeline
+
+```
+POST /api/links
+  └─ enqueue(linkId) → Cloudflare Queue
+       └─ Consumer Worker
+            ├─ isYouTubeUrl? → fetchYouTubeMetadata (oEmbed, no LLM)
+            └─ else          → scrapeFirecrawl → describeLlm (gpt-4o-mini)
+                               → UPDATE links SET micro_description, processing_status
 ```
 
-The local Studio UI is available at `http://localhost:54323`.
+Processing is fully async — capture confirms immediately, description arrives within ~30 s.
+Links that cannot be scraped are marked `failed` and shown with a visual indicator; they are
+never lost.
 
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+### Link lifecycle (4 states)
 
-### Using a cloud Supabase project instead
+| State | Meaning |
+|---|---|
+| `inbox` | Newly saved; user has not acted on it |
+| `library` | Consumed and kept — stays searchable |
+| `consumed_closed` | Consumed and dismissed — permanently deleted |
+| `discarded` | Dismissed without reading — permanently deleted |
 
-If you prefer to use a hosted Supabase project, add these variables to your `.env` and `.dev.vars` files:
+Visiting a link does not change its state — only a deliberate closure action does.
 
-| Variable       | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| `SUPABASE_URL` | Project URL from Supabase dashboard → Settings → API       |
-| `SUPABASE_KEY` | `anon` public key from Supabase dashboard → Settings → API |
+### Data isolation
+
+Every `links` row is owned by `user_id`. Row-level security policies on the `links` table
+enforce that no user can read or modify another user's data — even if API guards fail.
+
+---
+
+## Project structure
 
 ```
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_KEY=<anon-key>
+src/
+  components/          React islands + Astro components
+    hooks/             useLinkActions, useLinks
+    ui/                shadcn/ui primitives
+  lib/
+    services/          firecrawl.ts, describe.ts, youtube.ts, scrape.ts
+    queue.ts           producer helper
+    queue-consumer.ts  consumer handler (state machine)
+    supabase.ts        SSR client
+    supabase-admin.ts  service-role client (bot only)
+  pages/
+    api/links/         GET + POST /api/links, PATCH + DELETE /api/links/[id]
+    api/bot/webhook.ts Telegram webhook
+    api/auth/          signin, signup, signout
+  types.ts             shared entity types + literal unions
+
+supabase/migrations/   timestamped SQL migrations with RLS policies
+context/               living project documentation (see below)
 ```
 
-### Email confirmation in local development
+### `context/` — living documentation
 
-By default Supabase requires email confirmation before a user can sign in. To skip this during local development:
+All planning documents live here and are the source of truth for decisions, not trailing notes.
 
-1. Open the Supabase dashboard for your project
-2. Go to **Authentication → Email → Confirm email**
-3. Toggle it **off**
+```
+context/foundation/    PRD, roadmap, API conventions, tech stack, infrastructure,
+                       lessons learned, test plan, E2E testing guide
+context/changes/       active change folders (each has plan.md + change.md)
+context/archive/       completed changes (one folder per shipped slice)
+context/ideas/         parked feature ideas
+```
 
-Users can then sign in immediately after sign-up without clicking a confirmation link.
+---
 
-### Auth routes
+## Development workflow (10x flow)
 
-| Route                 | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `/auth/signin`        | Email/password sign-in form                                             |
-| `/auth/signup`        | Email/password sign-up form                                             |
-| `/auth/confirm-email` | Post-signup "check your inbox" page                                     |
-| `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated) |
+This project follows the **10x slice workflow** driven by Claude Code skills:
 
-Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
+1. **Shape** — `/ 10x-shape` — discovery conversation → `context/foundation/shape-notes.md`
+2. **PRD** — `/10x-prd` — generates `context/foundation/prd.md` from shape notes
+3. **Roadmap** — `/10x-roadmap` — ordered vertical slices in `context/foundation/roadmap.md`
+4. **Plan** — `/10x-plan <change-id>` — creates `context/changes/<id>/plan.md` with phased tasks
+5. **Implement** — `/10x-implement <change-id>` — executes the plan phase by phase with atomic commits
+6. **Archive** — `/10x-archive <change-id>` — moves the folder to `context/archive/`, stamps roadmap
+
+Each change folder contains `change.md` (identity, status) and `plan.md` (phases, progress).
+The roadmap is the single source of truth for what is done, in progress, and proposed next.
+
+### Current roadmap status
+
+| ID | Slice | Status |
+|---|---|---|
+| F-01 | Domain data foundation (schema + RLS) | done |
+| F-02 | Background processing skeleton (CF Queue) | done |
+| S-01 | Telegram bot capture → inbox | done |
+| S-02 | Auto-description pipeline (Firecrawl + LLM) | done |
+| S-02a | YouTube metadata description (oEmbed) | done |
+| S-04 | Closure flow + per-link manual edit | done |
+| S-03 | Natural-language search | proposed |
+| S-06 | Category proposal + routing | proposed |
+| S-05 | Browser extension capture | proposed |
+
+---
+
+## Testing
+
+Unit tests are colocated with source files (`src/**/*.test.ts`) and run in Node environment
+via Vitest. Test coverage focuses on the six documented risk scenarios:
+
+1. Queue deadlock / message not acked
+2. Telegram webhook forgery (HMAC validation)
+3. Queueing parity (bot and REST API both enqueue)
+4. Transient scraping errors (retry vs. permanent failure)
+5. LLM call failure (graceful degradation to `failed` status)
+6. RLS enforcement (user cannot read another user's links)
+
+E2E testing guide: `context/foundation/e2e-testing.md`.
+
+---
 
 ## Deployment
 
-This project deploys to [Cloudflare Workers](https://workers.cloudflare.com/).
-
-1. Build the project:
-
 ```bash
-npm run build
+# Build first — wrangler deploy alone deploys stale dist/
+bun run build
+bunx wrangler deploy
 ```
 
-2. Deploy with Wrangler:
+Set these Cloudflare secrets before deploying:
 
 ```bash
-npx wrangler deploy
+bunx wrangler secret put SUPABASE_URL
+bunx wrangler secret put SUPABASE_KEY
+bunx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+bunx wrangler secret put TELEGRAM_BOT_TOKEN
+bunx wrangler secret put TELEGRAM_SECRET_TOKEN
+bunx wrangler secret put ANTHROPIC_API_KEY
+bunx wrangler secret put FIRECRAWL_API_KEY
 ```
 
-Set `SUPABASE_URL` and `SUPABASE_KEY` as secrets in your Cloudflare dashboard or via `npx wrangler secret put`.
+Infrastructure details and risk register: `context/foundation/infrastructure.md`.
 
-## CI
+---
 
-GitHub Actions runs lint + build on every push and PR to `main`. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets in GitHub for the build step.
+## API conventions
 
-## License
+Full contract (status codes, response shapes, RLS→404 rationale): `context/foundation/api-conventions.md`.
 
-MIT
+Summary:
+- Auth check first — `401` if no session
+- `201` create, `200` read/update, `204` delete
+- Single resource not found or not yours → `404` (never `403`)
+- Errors: `{ error: "<code>" }`
